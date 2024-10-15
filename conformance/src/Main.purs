@@ -1,5 +1,5 @@
 -- | Entry point for the conformance test program.
-module Conformance.Main (main) where
+module Main (main) where
 
 import Prelude
 

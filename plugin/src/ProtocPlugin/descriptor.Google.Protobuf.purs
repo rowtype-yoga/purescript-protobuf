@@ -17,6 +17,8 @@ module Google.Protobuf.Descriptor
 , FileOptions(..), FileOptionsRow, FileOptionsR, parseFileOptions, putFileOptions, defaultFileOptions, mkFileOptions, mergeFileOptions
 , MessageOptions(..), MessageOptionsRow, MessageOptionsR, parseMessageOptions, putMessageOptions, defaultMessageOptions, mkMessageOptions, mergeMessageOptions
 , FieldOptions(..), FieldOptionsRow, FieldOptionsR, parseFieldOptions, putFieldOptions, defaultFieldOptions, mkFieldOptions, mergeFieldOptions
+, FieldOptions_EditionDefault(..), FieldOptions_EditionDefaultRow, FieldOptions_EditionDefaultR, parseFieldOptions_EditionDefault, putFieldOptions_EditionDefault, defaultFieldOptions_EditionDefault, mkFieldOptions_EditionDefault, mergeFieldOptions_EditionDefault
+, FieldOptions_FeatureSupport(..), FieldOptions_FeatureSupportRow, FieldOptions_FeatureSupportR, parseFieldOptions_FeatureSupport, putFieldOptions_FeatureSupport, defaultFieldOptions_FeatureSupport, mkFieldOptions_FeatureSupport, mergeFieldOptions_FeatureSupport
 , OneofOptions(..), OneofOptionsRow, OneofOptionsR, parseOneofOptions, putOneofOptions, defaultOneofOptions, mkOneofOptions, mergeOneofOptions
 , EnumOptions(..), EnumOptionsRow, EnumOptionsR, parseEnumOptions, putEnumOptions, defaultEnumOptions, mkEnumOptions, mergeEnumOptions
 , EnumValueOptions(..), EnumValueOptionsRow, EnumValueOptionsR, parseEnumValueOptions, putEnumValueOptions, defaultEnumValueOptions, mkEnumValueOptions, mergeEnumValueOptions
@@ -24,10 +26,14 @@ module Google.Protobuf.Descriptor
 , MethodOptions(..), MethodOptionsRow, MethodOptionsR, parseMethodOptions, putMethodOptions, defaultMethodOptions, mkMethodOptions, mergeMethodOptions
 , UninterpretedOption(..), UninterpretedOptionRow, UninterpretedOptionR, parseUninterpretedOption, putUninterpretedOption, defaultUninterpretedOption, mkUninterpretedOption, mergeUninterpretedOption
 , UninterpretedOption_NamePart(..), UninterpretedOption_NamePartRow, UninterpretedOption_NamePartR, parseUninterpretedOption_NamePart, putUninterpretedOption_NamePart, defaultUninterpretedOption_NamePart, mkUninterpretedOption_NamePart, mergeUninterpretedOption_NamePart
+, FeatureSet(..), FeatureSetRow, FeatureSetR, parseFeatureSet, putFeatureSet, defaultFeatureSet, mkFeatureSet, mergeFeatureSet
+, FeatureSetDefaults(..), FeatureSetDefaultsRow, FeatureSetDefaultsR, parseFeatureSetDefaults, putFeatureSetDefaults, defaultFeatureSetDefaults, mkFeatureSetDefaults, mergeFeatureSetDefaults
+, FeatureSetDefaults_FeatureSetEditionDefault(..), FeatureSetDefaults_FeatureSetEditionDefaultRow, FeatureSetDefaults_FeatureSetEditionDefaultR, parseFeatureSetDefaults_FeatureSetEditionDefault, putFeatureSetDefaults_FeatureSetEditionDefault, defaultFeatureSetDefaults_FeatureSetEditionDefault, mkFeatureSetDefaults_FeatureSetEditionDefault, mergeFeatureSetDefaults_FeatureSetEditionDefault
 , SourceCodeInfo(..), SourceCodeInfoRow, SourceCodeInfoR, parseSourceCodeInfo, putSourceCodeInfo, defaultSourceCodeInfo, mkSourceCodeInfo, mergeSourceCodeInfo
 , SourceCodeInfo_Location(..), SourceCodeInfo_LocationRow, SourceCodeInfo_LocationR, parseSourceCodeInfo_Location, putSourceCodeInfo_Location, defaultSourceCodeInfo_Location, mkSourceCodeInfo_Location, mergeSourceCodeInfo_Location
 , GeneratedCodeInfo(..), GeneratedCodeInfoRow, GeneratedCodeInfoR, parseGeneratedCodeInfo, putGeneratedCodeInfo, defaultGeneratedCodeInfo, mkGeneratedCodeInfo, mergeGeneratedCodeInfo
 , GeneratedCodeInfo_Annotation(..), GeneratedCodeInfo_AnnotationRow, GeneratedCodeInfo_AnnotationR, parseGeneratedCodeInfo_Annotation, putGeneratedCodeInfo_Annotation, defaultGeneratedCodeInfo_Annotation, mkGeneratedCodeInfo_Annotation, mergeGeneratedCodeInfo_Annotation
+, Edition(..)
 , ExtensionRangeOptions_VerificationState(..)
 , FieldDescriptorProto_Type(..)
 , FieldDescriptorProto_Label(..)
@@ -37,6 +43,12 @@ module Google.Protobuf.Descriptor
 , FieldOptions_OptionRetention(..)
 , FieldOptions_OptionTargetType(..)
 , MethodOptions_IdempotencyLevel(..)
+, FeatureSet_FieldPresence(..)
+, FeatureSet_EnumType(..)
+, FeatureSet_RepeatedFieldEncoding(..)
+, FeatureSet_Utf8Validation(..)
+, FeatureSet_MessageEncoding(..)
+, FeatureSet_JsonFormat(..)
 , GeneratedCodeInfo_Annotation_Semantic(..)
 )
 where
@@ -112,7 +124,7 @@ type FileDescriptorProtoRow =
   , options :: Prelude.Maybe FileOptions
   , source_code_info :: Prelude.Maybe SourceCodeInfo
   , syntax :: Prelude.Maybe String
-  , edition :: Prelude.Maybe String
+  , edition :: Prelude.Maybe Edition
   , __unknown_fields :: Array Prelude.UnknownField
   )
 type FileDescriptorProtoR = Record FileDescriptorProtoRow
@@ -135,7 +147,7 @@ putFileDescriptorProto (FileDescriptorProto r) = do
   Prelude.putOptional 8 r.options (\_ -> false) $ Prelude.putLenDel putFileOptions
   Prelude.putOptional 9 r.source_code_info (\_ -> false) $ Prelude.putLenDel putSourceCodeInfo
   Prelude.putOptional 12 r.syntax Prelude.isDefault Prelude.encodeStringField
-  Prelude.putOptional 13 r.edition Prelude.isDefault Prelude.encodeStringField
+  Prelude.putOptional 14 r.edition Prelude.isDefault Prelude.putEnumField
   Prelude.foldRecM (\_ x -> Prelude.putFieldUnknown x) unit r.__unknown_fields
 
 parseFileDescriptorProto :: forall m. Prelude.MonadEffect m => Prelude.MonadRec m => Prelude.ByteLength -> Prelude.ParserT Prelude.DataView m FileDescriptorProto
@@ -188,8 +200,8 @@ parseFileDescriptorProto length = Prelude.label "FileDescriptorProto / " $
   parseField 12 Prelude.LenDel = Prelude.label "syntax / " $ do
     x <- Prelude.decodeString
     pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "syntax") $ \_ -> Prelude.Just x
-  parseField 13 Prelude.LenDel = Prelude.label "edition / " $ do
-    x <- Prelude.decodeString
+  parseField 14 Prelude.VarInt = Prelude.label "edition / " $ do
+    x <- Prelude.parseEnum
     pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "edition") $ \_ -> Prelude.Just x
   parseField fieldNumber wireType = Prelude.parseFieldUnknown fieldNumber wireType
 
@@ -466,6 +478,7 @@ newtype ExtensionRangeOptions = ExtensionRangeOptions ExtensionRangeOptionsR
 type ExtensionRangeOptionsRow =
   ( uninterpreted_option :: Array UninterpretedOption
   , declaration :: Array ExtensionRangeOptions_Declaration
+  , features :: Prelude.Maybe FeatureSet
   , verification :: Prelude.Maybe ExtensionRangeOptions_VerificationState
   , __unknown_fields :: Array Prelude.UnknownField
   )
@@ -479,6 +492,7 @@ putExtensionRangeOptions :: forall m. Prelude.MonadEffect m => Prelude.MonadRec 
 putExtensionRangeOptions (ExtensionRangeOptions r) = do
   Prelude.putRepeated 999 r.uninterpreted_option $ Prelude.putLenDel putUninterpretedOption
   Prelude.putRepeated 2 r.declaration $ Prelude.putLenDel putExtensionRangeOptions_Declaration
+  Prelude.putOptional 50 r.features (\_ -> false) $ Prelude.putLenDel putFeatureSet
   Prelude.putOptional 3 r.verification Prelude.isDefault Prelude.putEnumField
   Prelude.foldRecM (\_ x -> Prelude.putFieldUnknown x) unit r.__unknown_fields
 
@@ -496,6 +510,9 @@ parseExtensionRangeOptions length = Prelude.label "ExtensionRangeOptions / " $
   parseField 2 Prelude.LenDel = Prelude.label "declaration / " $ do
     x <- Prelude.parseLenDel parseExtensionRangeOptions_Declaration
     pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "declaration") $ Prelude.flip Prelude.snoc x
+  parseField 50 Prelude.LenDel = Prelude.label "features / " $ do
+    x <- Prelude.parseLenDel parseFeatureSet
+    pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "features") $ Prelude.Just Prelude.<<< Prelude.maybe x (mergeFeatureSet x)
   parseField 3 Prelude.VarInt = Prelude.label "verification / " $ do
     x <- Prelude.parseEnum
     pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "verification") $ \_ -> Prelude.Just x
@@ -505,6 +522,7 @@ defaultExtensionRangeOptions :: ExtensionRangeOptionsR
 defaultExtensionRangeOptions =
   { uninterpreted_option: []
   , declaration: []
+  , features: Prelude.Nothing
   , verification: Prelude.Nothing
   , __unknown_fields: []
   }
@@ -516,6 +534,7 @@ mergeExtensionRangeOptions :: ExtensionRangeOptions -> ExtensionRangeOptions -> 
 mergeExtensionRangeOptions (ExtensionRangeOptions l) (ExtensionRangeOptions r) = ExtensionRangeOptions
   { uninterpreted_option: r.uninterpreted_option <> l.uninterpreted_option
   , declaration: r.declaration <> l.declaration
+  , features: Prelude.mergeWith mergeFeatureSet l.features r.features
   , verification: Prelude.alt l.verification r.verification
   , __unknown_fields: r.__unknown_fields <> l.__unknown_fields
   }
@@ -527,7 +546,6 @@ type ExtensionRangeOptions_DeclarationRow =
   ( number :: Prelude.Maybe Int
   , full_name :: Prelude.Maybe String
   , type :: Prelude.Maybe String
-  , is_repeated :: Prelude.Maybe Boolean
   , reserved :: Prelude.Maybe Boolean
   , repeated :: Prelude.Maybe Boolean
   , __unknown_fields :: Array Prelude.UnknownField
@@ -543,7 +561,6 @@ putExtensionRangeOptions_Declaration (ExtensionRangeOptions_Declaration r) = do
   Prelude.putOptional 1 r.number Prelude.isDefault Prelude.encodeInt32Field
   Prelude.putOptional 2 r.full_name Prelude.isDefault Prelude.encodeStringField
   Prelude.putOptional 3 r.type Prelude.isDefault Prelude.encodeStringField
-  Prelude.putOptional 4 r.is_repeated Prelude.isDefault Prelude.encodeBoolField
   Prelude.putOptional 5 r.reserved Prelude.isDefault Prelude.encodeBoolField
   Prelude.putOptional 6 r.repeated Prelude.isDefault Prelude.encodeBoolField
   Prelude.foldRecM (\_ x -> Prelude.putFieldUnknown x) unit r.__unknown_fields
@@ -565,9 +582,6 @@ parseExtensionRangeOptions_Declaration length = Prelude.label "Declaration / " $
   parseField 3 Prelude.LenDel = Prelude.label "type / " $ do
     x <- Prelude.decodeString
     pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "type") $ \_ -> Prelude.Just x
-  parseField 4 Prelude.VarInt = Prelude.label "is_repeated / " $ do
-    x <- Prelude.decodeBool
-    pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "is_repeated") $ \_ -> Prelude.Just x
   parseField 5 Prelude.VarInt = Prelude.label "reserved / " $ do
     x <- Prelude.decodeBool
     pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "reserved") $ \_ -> Prelude.Just x
@@ -581,7 +595,6 @@ defaultExtensionRangeOptions_Declaration =
   { number: Prelude.Nothing
   , full_name: Prelude.Nothing
   , type: Prelude.Nothing
-  , is_repeated: Prelude.Nothing
   , reserved: Prelude.Nothing
   , repeated: Prelude.Nothing
   , __unknown_fields: []
@@ -595,7 +608,6 @@ mergeExtensionRangeOptions_Declaration (ExtensionRangeOptions_Declaration l) (Ex
   { number: Prelude.alt l.number r.number
   , full_name: Prelude.alt l.full_name r.full_name
   , type: Prelude.alt l.type r.type
-  , is_repeated: Prelude.alt l.is_repeated r.is_repeated
   , reserved: Prelude.alt l.reserved r.reserved
   , repeated: Prelude.alt l.repeated r.repeated
   , __unknown_fields: r.__unknown_fields <> l.__unknown_fields
@@ -1131,7 +1143,6 @@ type FileOptionsRow =
   , cc_generic_services :: Prelude.Maybe Boolean
   , java_generic_services :: Prelude.Maybe Boolean
   , py_generic_services :: Prelude.Maybe Boolean
-  , php_generic_services :: Prelude.Maybe Boolean
   , deprecated :: Prelude.Maybe Boolean
   , cc_enable_arenas :: Prelude.Maybe Boolean
   , objc_class_prefix :: Prelude.Maybe String
@@ -1141,6 +1152,7 @@ type FileOptionsRow =
   , php_namespace :: Prelude.Maybe String
   , php_metadata_namespace :: Prelude.Maybe String
   , ruby_package :: Prelude.Maybe String
+  , features :: Prelude.Maybe FeatureSet
   , uninterpreted_option :: Array UninterpretedOption
   , __unknown_fields :: Array Prelude.UnknownField
   )
@@ -1162,7 +1174,6 @@ putFileOptions (FileOptions r) = do
   Prelude.putOptional 16 r.cc_generic_services Prelude.isDefault Prelude.encodeBoolField
   Prelude.putOptional 17 r.java_generic_services Prelude.isDefault Prelude.encodeBoolField
   Prelude.putOptional 18 r.py_generic_services Prelude.isDefault Prelude.encodeBoolField
-  Prelude.putOptional 42 r.php_generic_services Prelude.isDefault Prelude.encodeBoolField
   Prelude.putOptional 23 r.deprecated Prelude.isDefault Prelude.encodeBoolField
   Prelude.putOptional 31 r.cc_enable_arenas Prelude.isDefault Prelude.encodeBoolField
   Prelude.putOptional 36 r.objc_class_prefix Prelude.isDefault Prelude.encodeStringField
@@ -1172,6 +1183,7 @@ putFileOptions (FileOptions r) = do
   Prelude.putOptional 41 r.php_namespace Prelude.isDefault Prelude.encodeStringField
   Prelude.putOptional 44 r.php_metadata_namespace Prelude.isDefault Prelude.encodeStringField
   Prelude.putOptional 45 r.ruby_package Prelude.isDefault Prelude.encodeStringField
+  Prelude.putOptional 50 r.features (\_ -> false) $ Prelude.putLenDel putFeatureSet
   Prelude.putRepeated 999 r.uninterpreted_option $ Prelude.putLenDel putUninterpretedOption
   Prelude.foldRecM (\_ x -> Prelude.putFieldUnknown x) unit r.__unknown_fields
 
@@ -1213,9 +1225,6 @@ parseFileOptions length = Prelude.label "FileOptions / " $
   parseField 18 Prelude.VarInt = Prelude.label "py_generic_services / " $ do
     x <- Prelude.decodeBool
     pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "py_generic_services") $ \_ -> Prelude.Just x
-  parseField 42 Prelude.VarInt = Prelude.label "php_generic_services / " $ do
-    x <- Prelude.decodeBool
-    pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "php_generic_services") $ \_ -> Prelude.Just x
   parseField 23 Prelude.VarInt = Prelude.label "deprecated / " $ do
     x <- Prelude.decodeBool
     pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "deprecated") $ \_ -> Prelude.Just x
@@ -1243,6 +1252,9 @@ parseFileOptions length = Prelude.label "FileOptions / " $
   parseField 45 Prelude.LenDel = Prelude.label "ruby_package / " $ do
     x <- Prelude.decodeString
     pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "ruby_package") $ \_ -> Prelude.Just x
+  parseField 50 Prelude.LenDel = Prelude.label "features / " $ do
+    x <- Prelude.parseLenDel parseFeatureSet
+    pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "features") $ Prelude.Just Prelude.<<< Prelude.maybe x (mergeFeatureSet x)
   parseField 999 Prelude.LenDel = Prelude.label "uninterpreted_option / " $ do
     x <- Prelude.parseLenDel parseUninterpretedOption
     pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "uninterpreted_option") $ Prelude.flip Prelude.snoc x
@@ -1260,7 +1272,6 @@ defaultFileOptions =
   , cc_generic_services: Prelude.Nothing
   , java_generic_services: Prelude.Nothing
   , py_generic_services: Prelude.Nothing
-  , php_generic_services: Prelude.Nothing
   , deprecated: Prelude.Nothing
   , cc_enable_arenas: Prelude.Nothing
   , objc_class_prefix: Prelude.Nothing
@@ -1270,6 +1281,7 @@ defaultFileOptions =
   , php_namespace: Prelude.Nothing
   , php_metadata_namespace: Prelude.Nothing
   , ruby_package: Prelude.Nothing
+  , features: Prelude.Nothing
   , uninterpreted_option: []
   , __unknown_fields: []
   }
@@ -1289,7 +1301,6 @@ mergeFileOptions (FileOptions l) (FileOptions r) = FileOptions
   , cc_generic_services: Prelude.alt l.cc_generic_services r.cc_generic_services
   , java_generic_services: Prelude.alt l.java_generic_services r.java_generic_services
   , py_generic_services: Prelude.alt l.py_generic_services r.py_generic_services
-  , php_generic_services: Prelude.alt l.php_generic_services r.php_generic_services
   , deprecated: Prelude.alt l.deprecated r.deprecated
   , cc_enable_arenas: Prelude.alt l.cc_enable_arenas r.cc_enable_arenas
   , objc_class_prefix: Prelude.alt l.objc_class_prefix r.objc_class_prefix
@@ -1299,6 +1310,7 @@ mergeFileOptions (FileOptions l) (FileOptions r) = FileOptions
   , php_namespace: Prelude.alt l.php_namespace r.php_namespace
   , php_metadata_namespace: Prelude.alt l.php_metadata_namespace r.php_metadata_namespace
   , ruby_package: Prelude.alt l.ruby_package r.ruby_package
+  , features: Prelude.mergeWith mergeFeatureSet l.features r.features
   , uninterpreted_option: r.uninterpreted_option <> l.uninterpreted_option
   , __unknown_fields: r.__unknown_fields <> l.__unknown_fields
   }
@@ -1312,6 +1324,7 @@ type MessageOptionsRow =
   , deprecated :: Prelude.Maybe Boolean
   , map_entry :: Prelude.Maybe Boolean
   , deprecated_legacy_json_field_conflicts :: Prelude.Maybe Boolean
+  , features :: Prelude.Maybe FeatureSet
   , uninterpreted_option :: Array UninterpretedOption
   , __unknown_fields :: Array Prelude.UnknownField
   )
@@ -1328,6 +1341,7 @@ putMessageOptions (MessageOptions r) = do
   Prelude.putOptional 3 r.deprecated Prelude.isDefault Prelude.encodeBoolField
   Prelude.putOptional 7 r.map_entry Prelude.isDefault Prelude.encodeBoolField
   Prelude.putOptional 11 r.deprecated_legacy_json_field_conflicts Prelude.isDefault Prelude.encodeBoolField
+  Prelude.putOptional 12 r.features (\_ -> false) $ Prelude.putLenDel putFeatureSet
   Prelude.putRepeated 999 r.uninterpreted_option $ Prelude.putLenDel putUninterpretedOption
   Prelude.foldRecM (\_ x -> Prelude.putFieldUnknown x) unit r.__unknown_fields
 
@@ -1354,6 +1368,9 @@ parseMessageOptions length = Prelude.label "MessageOptions / " $
   parseField 11 Prelude.VarInt = Prelude.label "deprecated_legacy_json_field_conflicts / " $ do
     x <- Prelude.decodeBool
     pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "deprecated_legacy_json_field_conflicts") $ \_ -> Prelude.Just x
+  parseField 12 Prelude.LenDel = Prelude.label "features / " $ do
+    x <- Prelude.parseLenDel parseFeatureSet
+    pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "features") $ Prelude.Just Prelude.<<< Prelude.maybe x (mergeFeatureSet x)
   parseField 999 Prelude.LenDel = Prelude.label "uninterpreted_option / " $ do
     x <- Prelude.parseLenDel parseUninterpretedOption
     pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "uninterpreted_option") $ Prelude.flip Prelude.snoc x
@@ -1366,6 +1383,7 @@ defaultMessageOptions =
   , deprecated: Prelude.Nothing
   , map_entry: Prelude.Nothing
   , deprecated_legacy_json_field_conflicts: Prelude.Nothing
+  , features: Prelude.Nothing
   , uninterpreted_option: []
   , __unknown_fields: []
   }
@@ -1380,6 +1398,7 @@ mergeMessageOptions (MessageOptions l) (MessageOptions r) = MessageOptions
   , deprecated: Prelude.alt l.deprecated r.deprecated
   , map_entry: Prelude.alt l.map_entry r.map_entry
   , deprecated_legacy_json_field_conflicts: Prelude.alt l.deprecated_legacy_json_field_conflicts r.deprecated_legacy_json_field_conflicts
+  , features: Prelude.mergeWith mergeFeatureSet l.features r.features
   , uninterpreted_option: r.uninterpreted_option <> l.uninterpreted_option
   , __unknown_fields: r.__unknown_fields <> l.__unknown_fields
   }
@@ -1397,8 +1416,10 @@ type FieldOptionsRow =
   , weak :: Prelude.Maybe Boolean
   , debug_redact :: Prelude.Maybe Boolean
   , retention :: Prelude.Maybe FieldOptions_OptionRetention
-  , target :: Prelude.Maybe FieldOptions_OptionTargetType
   , targets :: Array FieldOptions_OptionTargetType
+  , edition_defaults :: Array FieldOptions_EditionDefault
+  , features :: Prelude.Maybe FeatureSet
+  , feature_support :: Prelude.Maybe FieldOptions_FeatureSupport
   , uninterpreted_option :: Array UninterpretedOption
   , __unknown_fields :: Array Prelude.UnknownField
   )
@@ -1419,8 +1440,10 @@ putFieldOptions (FieldOptions r) = do
   Prelude.putOptional 10 r.weak Prelude.isDefault Prelude.encodeBoolField
   Prelude.putOptional 16 r.debug_redact Prelude.isDefault Prelude.encodeBoolField
   Prelude.putOptional 17 r.retention Prelude.isDefault Prelude.putEnumField
-  Prelude.putOptional 18 r.target Prelude.isDefault Prelude.putEnumField
   Prelude.putPacked 19 r.targets Prelude.putEnum
+  Prelude.putRepeated 20 r.edition_defaults $ Prelude.putLenDel putFieldOptions_EditionDefault
+  Prelude.putOptional 21 r.features (\_ -> false) $ Prelude.putLenDel putFeatureSet
+  Prelude.putOptional 22 r.feature_support (\_ -> false) $ Prelude.putLenDel putFieldOptions_FeatureSupport
   Prelude.putRepeated 999 r.uninterpreted_option $ Prelude.putLenDel putUninterpretedOption
   Prelude.foldRecM (\_ x -> Prelude.putFieldUnknown x) unit r.__unknown_fields
 
@@ -1459,15 +1482,21 @@ parseFieldOptions length = Prelude.label "FieldOptions / " $
   parseField 17 Prelude.VarInt = Prelude.label "retention / " $ do
     x <- Prelude.parseEnum
     pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "retention") $ \_ -> Prelude.Just x
-  parseField 18 Prelude.VarInt = Prelude.label "target / " $ do
-    x <- Prelude.parseEnum
-    pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "target") $ \_ -> Prelude.Just x
   parseField 19 Prelude.VarInt = Prelude.label "targets / " $ do
     x <- Prelude.parseEnum
     pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "targets") $ Prelude.flip Prelude.snoc x
   parseField 19 Prelude.LenDel = Prelude.label "targets / " $ do
     x <- Prelude.parseLenDel $ Prelude.manyLength Prelude.parseEnum
     pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "targets") $ Prelude.flip Prelude.append x
+  parseField 20 Prelude.LenDel = Prelude.label "edition_defaults / " $ do
+    x <- Prelude.parseLenDel parseFieldOptions_EditionDefault
+    pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "edition_defaults") $ Prelude.flip Prelude.snoc x
+  parseField 21 Prelude.LenDel = Prelude.label "features / " $ do
+    x <- Prelude.parseLenDel parseFeatureSet
+    pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "features") $ Prelude.Just Prelude.<<< Prelude.maybe x (mergeFeatureSet x)
+  parseField 22 Prelude.LenDel = Prelude.label "feature_support / " $ do
+    x <- Prelude.parseLenDel parseFieldOptions_FeatureSupport
+    pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "feature_support") $ Prelude.Just Prelude.<<< Prelude.maybe x (mergeFieldOptions_FeatureSupport x)
   parseField 999 Prelude.LenDel = Prelude.label "uninterpreted_option / " $ do
     x <- Prelude.parseLenDel parseUninterpretedOption
     pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "uninterpreted_option") $ Prelude.flip Prelude.snoc x
@@ -1484,8 +1513,10 @@ defaultFieldOptions =
   , weak: Prelude.Nothing
   , debug_redact: Prelude.Nothing
   , retention: Prelude.Nothing
-  , target: Prelude.Nothing
   , targets: []
+  , edition_defaults: []
+  , features: Prelude.Nothing
+  , feature_support: Prelude.Nothing
   , uninterpreted_option: []
   , __unknown_fields: []
   }
@@ -1504,9 +1535,133 @@ mergeFieldOptions (FieldOptions l) (FieldOptions r) = FieldOptions
   , weak: Prelude.alt l.weak r.weak
   , debug_redact: Prelude.alt l.debug_redact r.debug_redact
   , retention: Prelude.alt l.retention r.retention
-  , target: Prelude.alt l.target r.target
   , targets: r.targets <> l.targets
+  , edition_defaults: r.edition_defaults <> l.edition_defaults
+  , features: Prelude.mergeWith mergeFeatureSet l.features r.features
+  , feature_support: Prelude.mergeWith mergeFieldOptions_FeatureSupport l.feature_support r.feature_support
   , uninterpreted_option: r.uninterpreted_option <> l.uninterpreted_option
+  , __unknown_fields: r.__unknown_fields <> l.__unknown_fields
+  }
+
+
+-- | Message generated by __protobuf__ from `google.protobuf.FieldOptions.EditionDefault`
+newtype FieldOptions_EditionDefault = FieldOptions_EditionDefault FieldOptions_EditionDefaultR
+type FieldOptions_EditionDefaultRow =
+  ( edition :: Prelude.Maybe Edition
+  , value :: Prelude.Maybe String
+  , __unknown_fields :: Array Prelude.UnknownField
+  )
+type FieldOptions_EditionDefaultR = Record FieldOptions_EditionDefaultRow
+derive instance genericFieldOptions_EditionDefault :: Prelude.Generic FieldOptions_EditionDefault _
+derive instance newtypeFieldOptions_EditionDefault :: Prelude.Newtype FieldOptions_EditionDefault _
+derive instance eqFieldOptions_EditionDefault :: Prelude.Eq FieldOptions_EditionDefault
+instance showFieldOptions_EditionDefault :: Prelude.Show FieldOptions_EditionDefault where show x = Prelude.genericShow x
+
+putFieldOptions_EditionDefault :: forall m. Prelude.MonadEffect m => Prelude.MonadRec m => FieldOptions_EditionDefault -> Prelude.PutM m Prelude.Unit
+putFieldOptions_EditionDefault (FieldOptions_EditionDefault r) = do
+  Prelude.putOptional 3 r.edition Prelude.isDefault Prelude.putEnumField
+  Prelude.putOptional 2 r.value Prelude.isDefault Prelude.encodeStringField
+  Prelude.foldRecM (\_ x -> Prelude.putFieldUnknown x) unit r.__unknown_fields
+
+parseFieldOptions_EditionDefault :: forall m. Prelude.MonadEffect m => Prelude.MonadRec m => Prelude.ByteLength -> Prelude.ParserT Prelude.DataView m FieldOptions_EditionDefault
+parseFieldOptions_EditionDefault length = Prelude.label "EditionDefault / " $
+  Prelude.parseMessage FieldOptions_EditionDefault defaultFieldOptions_EditionDefault parseField length
+ where
+  parseField
+    :: Prelude.FieldNumberInt
+    -> Prelude.WireType
+    -> Prelude.ParserT Prelude.DataView m (Prelude.Builder FieldOptions_EditionDefaultR FieldOptions_EditionDefaultR)
+  parseField 3 Prelude.VarInt = Prelude.label "edition / " $ do
+    x <- Prelude.parseEnum
+    pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "edition") $ \_ -> Prelude.Just x
+  parseField 2 Prelude.LenDel = Prelude.label "value / " $ do
+    x <- Prelude.decodeString
+    pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "value") $ \_ -> Prelude.Just x
+  parseField fieldNumber wireType = Prelude.parseFieldUnknown fieldNumber wireType
+
+defaultFieldOptions_EditionDefault :: FieldOptions_EditionDefaultR
+defaultFieldOptions_EditionDefault =
+  { edition: Prelude.Nothing
+  , value: Prelude.Nothing
+  , __unknown_fields: []
+  }
+
+mkFieldOptions_EditionDefault :: forall r1 r3. Prelude.Union r1 FieldOptions_EditionDefaultRow r3 => Prelude.Nub r3 FieldOptions_EditionDefaultRow => Record r1 -> FieldOptions_EditionDefault
+mkFieldOptions_EditionDefault r = FieldOptions_EditionDefault $ Prelude.merge r defaultFieldOptions_EditionDefault
+
+mergeFieldOptions_EditionDefault :: FieldOptions_EditionDefault -> FieldOptions_EditionDefault -> FieldOptions_EditionDefault
+mergeFieldOptions_EditionDefault (FieldOptions_EditionDefault l) (FieldOptions_EditionDefault r) = FieldOptions_EditionDefault
+  { edition: Prelude.alt l.edition r.edition
+  , value: Prelude.alt l.value r.value
+  , __unknown_fields: r.__unknown_fields <> l.__unknown_fields
+  }
+
+
+-- | Message generated by __protobuf__ from `google.protobuf.FieldOptions.FeatureSupport`
+-- | 
+-- | Information about the support window of a feature.
+newtype FieldOptions_FeatureSupport = FieldOptions_FeatureSupport FieldOptions_FeatureSupportR
+type FieldOptions_FeatureSupportRow =
+  ( edition_introduced :: Prelude.Maybe Edition
+  , edition_deprecated :: Prelude.Maybe Edition
+  , deprecation_warning :: Prelude.Maybe String
+  , edition_removed :: Prelude.Maybe Edition
+  , __unknown_fields :: Array Prelude.UnknownField
+  )
+type FieldOptions_FeatureSupportR = Record FieldOptions_FeatureSupportRow
+derive instance genericFieldOptions_FeatureSupport :: Prelude.Generic FieldOptions_FeatureSupport _
+derive instance newtypeFieldOptions_FeatureSupport :: Prelude.Newtype FieldOptions_FeatureSupport _
+derive instance eqFieldOptions_FeatureSupport :: Prelude.Eq FieldOptions_FeatureSupport
+instance showFieldOptions_FeatureSupport :: Prelude.Show FieldOptions_FeatureSupport where show x = Prelude.genericShow x
+
+putFieldOptions_FeatureSupport :: forall m. Prelude.MonadEffect m => Prelude.MonadRec m => FieldOptions_FeatureSupport -> Prelude.PutM m Prelude.Unit
+putFieldOptions_FeatureSupport (FieldOptions_FeatureSupport r) = do
+  Prelude.putOptional 1 r.edition_introduced Prelude.isDefault Prelude.putEnumField
+  Prelude.putOptional 2 r.edition_deprecated Prelude.isDefault Prelude.putEnumField
+  Prelude.putOptional 3 r.deprecation_warning Prelude.isDefault Prelude.encodeStringField
+  Prelude.putOptional 4 r.edition_removed Prelude.isDefault Prelude.putEnumField
+  Prelude.foldRecM (\_ x -> Prelude.putFieldUnknown x) unit r.__unknown_fields
+
+parseFieldOptions_FeatureSupport :: forall m. Prelude.MonadEffect m => Prelude.MonadRec m => Prelude.ByteLength -> Prelude.ParserT Prelude.DataView m FieldOptions_FeatureSupport
+parseFieldOptions_FeatureSupport length = Prelude.label "FeatureSupport / " $
+  Prelude.parseMessage FieldOptions_FeatureSupport defaultFieldOptions_FeatureSupport parseField length
+ where
+  parseField
+    :: Prelude.FieldNumberInt
+    -> Prelude.WireType
+    -> Prelude.ParserT Prelude.DataView m (Prelude.Builder FieldOptions_FeatureSupportR FieldOptions_FeatureSupportR)
+  parseField 1 Prelude.VarInt = Prelude.label "edition_introduced / " $ do
+    x <- Prelude.parseEnum
+    pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "edition_introduced") $ \_ -> Prelude.Just x
+  parseField 2 Prelude.VarInt = Prelude.label "edition_deprecated / " $ do
+    x <- Prelude.parseEnum
+    pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "edition_deprecated") $ \_ -> Prelude.Just x
+  parseField 3 Prelude.LenDel = Prelude.label "deprecation_warning / " $ do
+    x <- Prelude.decodeString
+    pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "deprecation_warning") $ \_ -> Prelude.Just x
+  parseField 4 Prelude.VarInt = Prelude.label "edition_removed / " $ do
+    x <- Prelude.parseEnum
+    pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "edition_removed") $ \_ -> Prelude.Just x
+  parseField fieldNumber wireType = Prelude.parseFieldUnknown fieldNumber wireType
+
+defaultFieldOptions_FeatureSupport :: FieldOptions_FeatureSupportR
+defaultFieldOptions_FeatureSupport =
+  { edition_introduced: Prelude.Nothing
+  , edition_deprecated: Prelude.Nothing
+  , deprecation_warning: Prelude.Nothing
+  , edition_removed: Prelude.Nothing
+  , __unknown_fields: []
+  }
+
+mkFieldOptions_FeatureSupport :: forall r1 r3. Prelude.Union r1 FieldOptions_FeatureSupportRow r3 => Prelude.Nub r3 FieldOptions_FeatureSupportRow => Record r1 -> FieldOptions_FeatureSupport
+mkFieldOptions_FeatureSupport r = FieldOptions_FeatureSupport $ Prelude.merge r defaultFieldOptions_FeatureSupport
+
+mergeFieldOptions_FeatureSupport :: FieldOptions_FeatureSupport -> FieldOptions_FeatureSupport -> FieldOptions_FeatureSupport
+mergeFieldOptions_FeatureSupport (FieldOptions_FeatureSupport l) (FieldOptions_FeatureSupport r) = FieldOptions_FeatureSupport
+  { edition_introduced: Prelude.alt l.edition_introduced r.edition_introduced
+  , edition_deprecated: Prelude.alt l.edition_deprecated r.edition_deprecated
+  , deprecation_warning: Prelude.alt l.deprecation_warning r.deprecation_warning
+  , edition_removed: Prelude.alt l.edition_removed r.edition_removed
   , __unknown_fields: r.__unknown_fields <> l.__unknown_fields
   }
 
@@ -1514,7 +1669,8 @@ mergeFieldOptions (FieldOptions l) (FieldOptions r) = FieldOptions
 -- | Message generated by __protobuf__ from `google.protobuf.OneofOptions`
 newtype OneofOptions = OneofOptions OneofOptionsR
 type OneofOptionsRow =
-  ( uninterpreted_option :: Array UninterpretedOption
+  ( features :: Prelude.Maybe FeatureSet
+  , uninterpreted_option :: Array UninterpretedOption
   , __unknown_fields :: Array Prelude.UnknownField
   )
 type OneofOptionsR = Record OneofOptionsRow
@@ -1525,6 +1681,7 @@ instance showOneofOptions :: Prelude.Show OneofOptions where show x = Prelude.ge
 
 putOneofOptions :: forall m. Prelude.MonadEffect m => Prelude.MonadRec m => OneofOptions -> Prelude.PutM m Prelude.Unit
 putOneofOptions (OneofOptions r) = do
+  Prelude.putOptional 1 r.features (\_ -> false) $ Prelude.putLenDel putFeatureSet
   Prelude.putRepeated 999 r.uninterpreted_option $ Prelude.putLenDel putUninterpretedOption
   Prelude.foldRecM (\_ x -> Prelude.putFieldUnknown x) unit r.__unknown_fields
 
@@ -1536,6 +1693,9 @@ parseOneofOptions length = Prelude.label "OneofOptions / " $
     :: Prelude.FieldNumberInt
     -> Prelude.WireType
     -> Prelude.ParserT Prelude.DataView m (Prelude.Builder OneofOptionsR OneofOptionsR)
+  parseField 1 Prelude.LenDel = Prelude.label "features / " $ do
+    x <- Prelude.parseLenDel parseFeatureSet
+    pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "features") $ Prelude.Just Prelude.<<< Prelude.maybe x (mergeFeatureSet x)
   parseField 999 Prelude.LenDel = Prelude.label "uninterpreted_option / " $ do
     x <- Prelude.parseLenDel parseUninterpretedOption
     pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "uninterpreted_option") $ Prelude.flip Prelude.snoc x
@@ -1543,7 +1703,8 @@ parseOneofOptions length = Prelude.label "OneofOptions / " $
 
 defaultOneofOptions :: OneofOptionsR
 defaultOneofOptions =
-  { uninterpreted_option: []
+  { features: Prelude.Nothing
+  , uninterpreted_option: []
   , __unknown_fields: []
   }
 
@@ -1552,7 +1713,8 @@ mkOneofOptions r = OneofOptions $ Prelude.merge r defaultOneofOptions
 
 mergeOneofOptions :: OneofOptions -> OneofOptions -> OneofOptions
 mergeOneofOptions (OneofOptions l) (OneofOptions r) = OneofOptions
-  { uninterpreted_option: r.uninterpreted_option <> l.uninterpreted_option
+  { features: Prelude.mergeWith mergeFeatureSet l.features r.features
+  , uninterpreted_option: r.uninterpreted_option <> l.uninterpreted_option
   , __unknown_fields: r.__unknown_fields <> l.__unknown_fields
   }
 
@@ -1563,6 +1725,7 @@ type EnumOptionsRow =
   ( allow_alias :: Prelude.Maybe Boolean
   , deprecated :: Prelude.Maybe Boolean
   , deprecated_legacy_json_field_conflicts :: Prelude.Maybe Boolean
+  , features :: Prelude.Maybe FeatureSet
   , uninterpreted_option :: Array UninterpretedOption
   , __unknown_fields :: Array Prelude.UnknownField
   )
@@ -1577,6 +1740,7 @@ putEnumOptions (EnumOptions r) = do
   Prelude.putOptional 2 r.allow_alias Prelude.isDefault Prelude.encodeBoolField
   Prelude.putOptional 3 r.deprecated Prelude.isDefault Prelude.encodeBoolField
   Prelude.putOptional 6 r.deprecated_legacy_json_field_conflicts Prelude.isDefault Prelude.encodeBoolField
+  Prelude.putOptional 7 r.features (\_ -> false) $ Prelude.putLenDel putFeatureSet
   Prelude.putRepeated 999 r.uninterpreted_option $ Prelude.putLenDel putUninterpretedOption
   Prelude.foldRecM (\_ x -> Prelude.putFieldUnknown x) unit r.__unknown_fields
 
@@ -1597,6 +1761,9 @@ parseEnumOptions length = Prelude.label "EnumOptions / " $
   parseField 6 Prelude.VarInt = Prelude.label "deprecated_legacy_json_field_conflicts / " $ do
     x <- Prelude.decodeBool
     pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "deprecated_legacy_json_field_conflicts") $ \_ -> Prelude.Just x
+  parseField 7 Prelude.LenDel = Prelude.label "features / " $ do
+    x <- Prelude.parseLenDel parseFeatureSet
+    pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "features") $ Prelude.Just Prelude.<<< Prelude.maybe x (mergeFeatureSet x)
   parseField 999 Prelude.LenDel = Prelude.label "uninterpreted_option / " $ do
     x <- Prelude.parseLenDel parseUninterpretedOption
     pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "uninterpreted_option") $ Prelude.flip Prelude.snoc x
@@ -1607,6 +1774,7 @@ defaultEnumOptions =
   { allow_alias: Prelude.Nothing
   , deprecated: Prelude.Nothing
   , deprecated_legacy_json_field_conflicts: Prelude.Nothing
+  , features: Prelude.Nothing
   , uninterpreted_option: []
   , __unknown_fields: []
   }
@@ -1619,6 +1787,7 @@ mergeEnumOptions (EnumOptions l) (EnumOptions r) = EnumOptions
   { allow_alias: Prelude.alt l.allow_alias r.allow_alias
   , deprecated: Prelude.alt l.deprecated r.deprecated
   , deprecated_legacy_json_field_conflicts: Prelude.alt l.deprecated_legacy_json_field_conflicts r.deprecated_legacy_json_field_conflicts
+  , features: Prelude.mergeWith mergeFeatureSet l.features r.features
   , uninterpreted_option: r.uninterpreted_option <> l.uninterpreted_option
   , __unknown_fields: r.__unknown_fields <> l.__unknown_fields
   }
@@ -1628,6 +1797,9 @@ mergeEnumOptions (EnumOptions l) (EnumOptions r) = EnumOptions
 newtype EnumValueOptions = EnumValueOptions EnumValueOptionsR
 type EnumValueOptionsRow =
   ( deprecated :: Prelude.Maybe Boolean
+  , features :: Prelude.Maybe FeatureSet
+  , debug_redact :: Prelude.Maybe Boolean
+  , feature_support :: Prelude.Maybe FieldOptions_FeatureSupport
   , uninterpreted_option :: Array UninterpretedOption
   , __unknown_fields :: Array Prelude.UnknownField
   )
@@ -1640,6 +1812,9 @@ instance showEnumValueOptions :: Prelude.Show EnumValueOptions where show x = Pr
 putEnumValueOptions :: forall m. Prelude.MonadEffect m => Prelude.MonadRec m => EnumValueOptions -> Prelude.PutM m Prelude.Unit
 putEnumValueOptions (EnumValueOptions r) = do
   Prelude.putOptional 1 r.deprecated Prelude.isDefault Prelude.encodeBoolField
+  Prelude.putOptional 2 r.features (\_ -> false) $ Prelude.putLenDel putFeatureSet
+  Prelude.putOptional 3 r.debug_redact Prelude.isDefault Prelude.encodeBoolField
+  Prelude.putOptional 4 r.feature_support (\_ -> false) $ Prelude.putLenDel putFieldOptions_FeatureSupport
   Prelude.putRepeated 999 r.uninterpreted_option $ Prelude.putLenDel putUninterpretedOption
   Prelude.foldRecM (\_ x -> Prelude.putFieldUnknown x) unit r.__unknown_fields
 
@@ -1654,6 +1829,15 @@ parseEnumValueOptions length = Prelude.label "EnumValueOptions / " $
   parseField 1 Prelude.VarInt = Prelude.label "deprecated / " $ do
     x <- Prelude.decodeBool
     pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "deprecated") $ \_ -> Prelude.Just x
+  parseField 2 Prelude.LenDel = Prelude.label "features / " $ do
+    x <- Prelude.parseLenDel parseFeatureSet
+    pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "features") $ Prelude.Just Prelude.<<< Prelude.maybe x (mergeFeatureSet x)
+  parseField 3 Prelude.VarInt = Prelude.label "debug_redact / " $ do
+    x <- Prelude.decodeBool
+    pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "debug_redact") $ \_ -> Prelude.Just x
+  parseField 4 Prelude.LenDel = Prelude.label "feature_support / " $ do
+    x <- Prelude.parseLenDel parseFieldOptions_FeatureSupport
+    pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "feature_support") $ Prelude.Just Prelude.<<< Prelude.maybe x (mergeFieldOptions_FeatureSupport x)
   parseField 999 Prelude.LenDel = Prelude.label "uninterpreted_option / " $ do
     x <- Prelude.parseLenDel parseUninterpretedOption
     pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "uninterpreted_option") $ Prelude.flip Prelude.snoc x
@@ -1662,6 +1846,9 @@ parseEnumValueOptions length = Prelude.label "EnumValueOptions / " $
 defaultEnumValueOptions :: EnumValueOptionsR
 defaultEnumValueOptions =
   { deprecated: Prelude.Nothing
+  , features: Prelude.Nothing
+  , debug_redact: Prelude.Nothing
+  , feature_support: Prelude.Nothing
   , uninterpreted_option: []
   , __unknown_fields: []
   }
@@ -1672,6 +1859,9 @@ mkEnumValueOptions r = EnumValueOptions $ Prelude.merge r defaultEnumValueOption
 mergeEnumValueOptions :: EnumValueOptions -> EnumValueOptions -> EnumValueOptions
 mergeEnumValueOptions (EnumValueOptions l) (EnumValueOptions r) = EnumValueOptions
   { deprecated: Prelude.alt l.deprecated r.deprecated
+  , features: Prelude.mergeWith mergeFeatureSet l.features r.features
+  , debug_redact: Prelude.alt l.debug_redact r.debug_redact
+  , feature_support: Prelude.mergeWith mergeFieldOptions_FeatureSupport l.feature_support r.feature_support
   , uninterpreted_option: r.uninterpreted_option <> l.uninterpreted_option
   , __unknown_fields: r.__unknown_fields <> l.__unknown_fields
   }
@@ -1680,7 +1870,8 @@ mergeEnumValueOptions (EnumValueOptions l) (EnumValueOptions r) = EnumValueOptio
 -- | Message generated by __protobuf__ from `google.protobuf.ServiceOptions`
 newtype ServiceOptions = ServiceOptions ServiceOptionsR
 type ServiceOptionsRow =
-  ( deprecated :: Prelude.Maybe Boolean
+  ( features :: Prelude.Maybe FeatureSet
+  , deprecated :: Prelude.Maybe Boolean
   , uninterpreted_option :: Array UninterpretedOption
   , __unknown_fields :: Array Prelude.UnknownField
   )
@@ -1692,6 +1883,7 @@ instance showServiceOptions :: Prelude.Show ServiceOptions where show x = Prelud
 
 putServiceOptions :: forall m. Prelude.MonadEffect m => Prelude.MonadRec m => ServiceOptions -> Prelude.PutM m Prelude.Unit
 putServiceOptions (ServiceOptions r) = do
+  Prelude.putOptional 34 r.features (\_ -> false) $ Prelude.putLenDel putFeatureSet
   Prelude.putOptional 33 r.deprecated Prelude.isDefault Prelude.encodeBoolField
   Prelude.putRepeated 999 r.uninterpreted_option $ Prelude.putLenDel putUninterpretedOption
   Prelude.foldRecM (\_ x -> Prelude.putFieldUnknown x) unit r.__unknown_fields
@@ -1704,6 +1896,9 @@ parseServiceOptions length = Prelude.label "ServiceOptions / " $
     :: Prelude.FieldNumberInt
     -> Prelude.WireType
     -> Prelude.ParserT Prelude.DataView m (Prelude.Builder ServiceOptionsR ServiceOptionsR)
+  parseField 34 Prelude.LenDel = Prelude.label "features / " $ do
+    x <- Prelude.parseLenDel parseFeatureSet
+    pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "features") $ Prelude.Just Prelude.<<< Prelude.maybe x (mergeFeatureSet x)
   parseField 33 Prelude.VarInt = Prelude.label "deprecated / " $ do
     x <- Prelude.decodeBool
     pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "deprecated") $ \_ -> Prelude.Just x
@@ -1714,7 +1909,8 @@ parseServiceOptions length = Prelude.label "ServiceOptions / " $
 
 defaultServiceOptions :: ServiceOptionsR
 defaultServiceOptions =
-  { deprecated: Prelude.Nothing
+  { features: Prelude.Nothing
+  , deprecated: Prelude.Nothing
   , uninterpreted_option: []
   , __unknown_fields: []
   }
@@ -1724,7 +1920,8 @@ mkServiceOptions r = ServiceOptions $ Prelude.merge r defaultServiceOptions
 
 mergeServiceOptions :: ServiceOptions -> ServiceOptions -> ServiceOptions
 mergeServiceOptions (ServiceOptions l) (ServiceOptions r) = ServiceOptions
-  { deprecated: Prelude.alt l.deprecated r.deprecated
+  { features: Prelude.mergeWith mergeFeatureSet l.features r.features
+  , deprecated: Prelude.alt l.deprecated r.deprecated
   , uninterpreted_option: r.uninterpreted_option <> l.uninterpreted_option
   , __unknown_fields: r.__unknown_fields <> l.__unknown_fields
   }
@@ -1735,6 +1932,7 @@ newtype MethodOptions = MethodOptions MethodOptionsR
 type MethodOptionsRow =
   ( deprecated :: Prelude.Maybe Boolean
   , idempotency_level :: Prelude.Maybe MethodOptions_IdempotencyLevel
+  , features :: Prelude.Maybe FeatureSet
   , uninterpreted_option :: Array UninterpretedOption
   , __unknown_fields :: Array Prelude.UnknownField
   )
@@ -1748,6 +1946,7 @@ putMethodOptions :: forall m. Prelude.MonadEffect m => Prelude.MonadRec m => Met
 putMethodOptions (MethodOptions r) = do
   Prelude.putOptional 33 r.deprecated Prelude.isDefault Prelude.encodeBoolField
   Prelude.putOptional 34 r.idempotency_level Prelude.isDefault Prelude.putEnumField
+  Prelude.putOptional 35 r.features (\_ -> false) $ Prelude.putLenDel putFeatureSet
   Prelude.putRepeated 999 r.uninterpreted_option $ Prelude.putLenDel putUninterpretedOption
   Prelude.foldRecM (\_ x -> Prelude.putFieldUnknown x) unit r.__unknown_fields
 
@@ -1765,6 +1964,9 @@ parseMethodOptions length = Prelude.label "MethodOptions / " $
   parseField 34 Prelude.VarInt = Prelude.label "idempotency_level / " $ do
     x <- Prelude.parseEnum
     pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "idempotency_level") $ \_ -> Prelude.Just x
+  parseField 35 Prelude.LenDel = Prelude.label "features / " $ do
+    x <- Prelude.parseLenDel parseFeatureSet
+    pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "features") $ Prelude.Just Prelude.<<< Prelude.maybe x (mergeFeatureSet x)
   parseField 999 Prelude.LenDel = Prelude.label "uninterpreted_option / " $ do
     x <- Prelude.parseLenDel parseUninterpretedOption
     pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "uninterpreted_option") $ Prelude.flip Prelude.snoc x
@@ -1774,6 +1976,7 @@ defaultMethodOptions :: MethodOptionsR
 defaultMethodOptions =
   { deprecated: Prelude.Nothing
   , idempotency_level: Prelude.Nothing
+  , features: Prelude.Nothing
   , uninterpreted_option: []
   , __unknown_fields: []
   }
@@ -1785,6 +1988,7 @@ mergeMethodOptions :: MethodOptions -> MethodOptions -> MethodOptions
 mergeMethodOptions (MethodOptions l) (MethodOptions r) = MethodOptions
   { deprecated: Prelude.alt l.deprecated r.deprecated
   , idempotency_level: Prelude.alt l.idempotency_level r.idempotency_level
+  , features: Prelude.mergeWith mergeFeatureSet l.features r.features
   , uninterpreted_option: r.uninterpreted_option <> l.uninterpreted_option
   , __unknown_fields: r.__unknown_fields <> l.__unknown_fields
   }
@@ -1940,6 +2144,224 @@ mergeUninterpretedOption_NamePart :: UninterpretedOption_NamePart -> Uninterpret
 mergeUninterpretedOption_NamePart (UninterpretedOption_NamePart l) (UninterpretedOption_NamePart r) = UninterpretedOption_NamePart
   { name_part: Prelude.alt l.name_part r.name_part
   , is_extension: Prelude.alt l.is_extension r.is_extension
+  , __unknown_fields: r.__unknown_fields <> l.__unknown_fields
+  }
+
+
+-- | Message generated by __protobuf__ from `google.protobuf.FeatureSet`
+-- | 
+-- | TODO Enums in C++ gencode (and potentially other languages) are
+-- | not well scoped.  This means that each of the feature enums below can clash
+-- | with each other.  The short names we've chosen maximize call-site
+-- | readability, but leave us very open to this scenario.  A future feature will
+-- | be designed and implemented to handle this, hopefully before we ever hit a
+-- | conflict here.
+newtype FeatureSet = FeatureSet FeatureSetR
+type FeatureSetRow =
+  ( field_presence :: Prelude.Maybe FeatureSet_FieldPresence
+  , enum_type :: Prelude.Maybe FeatureSet_EnumType
+  , repeated_field_encoding :: Prelude.Maybe FeatureSet_RepeatedFieldEncoding
+  , utf8_validation :: Prelude.Maybe FeatureSet_Utf8Validation
+  , message_encoding :: Prelude.Maybe FeatureSet_MessageEncoding
+  , json_format :: Prelude.Maybe FeatureSet_JsonFormat
+  , __unknown_fields :: Array Prelude.UnknownField
+  )
+type FeatureSetR = Record FeatureSetRow
+derive instance genericFeatureSet :: Prelude.Generic FeatureSet _
+derive instance newtypeFeatureSet :: Prelude.Newtype FeatureSet _
+derive instance eqFeatureSet :: Prelude.Eq FeatureSet
+instance showFeatureSet :: Prelude.Show FeatureSet where show x = Prelude.genericShow x
+
+putFeatureSet :: forall m. Prelude.MonadEffect m => Prelude.MonadRec m => FeatureSet -> Prelude.PutM m Prelude.Unit
+putFeatureSet (FeatureSet r) = do
+  Prelude.putOptional 1 r.field_presence Prelude.isDefault Prelude.putEnumField
+  Prelude.putOptional 2 r.enum_type Prelude.isDefault Prelude.putEnumField
+  Prelude.putOptional 3 r.repeated_field_encoding Prelude.isDefault Prelude.putEnumField
+  Prelude.putOptional 4 r.utf8_validation Prelude.isDefault Prelude.putEnumField
+  Prelude.putOptional 5 r.message_encoding Prelude.isDefault Prelude.putEnumField
+  Prelude.putOptional 6 r.json_format Prelude.isDefault Prelude.putEnumField
+  Prelude.foldRecM (\_ x -> Prelude.putFieldUnknown x) unit r.__unknown_fields
+
+parseFeatureSet :: forall m. Prelude.MonadEffect m => Prelude.MonadRec m => Prelude.ByteLength -> Prelude.ParserT Prelude.DataView m FeatureSet
+parseFeatureSet length = Prelude.label "FeatureSet / " $
+  Prelude.parseMessage FeatureSet defaultFeatureSet parseField length
+ where
+  parseField
+    :: Prelude.FieldNumberInt
+    -> Prelude.WireType
+    -> Prelude.ParserT Prelude.DataView m (Prelude.Builder FeatureSetR FeatureSetR)
+  parseField 1 Prelude.VarInt = Prelude.label "field_presence / " $ do
+    x <- Prelude.parseEnum
+    pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "field_presence") $ \_ -> Prelude.Just x
+  parseField 2 Prelude.VarInt = Prelude.label "enum_type / " $ do
+    x <- Prelude.parseEnum
+    pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "enum_type") $ \_ -> Prelude.Just x
+  parseField 3 Prelude.VarInt = Prelude.label "repeated_field_encoding / " $ do
+    x <- Prelude.parseEnum
+    pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "repeated_field_encoding") $ \_ -> Prelude.Just x
+  parseField 4 Prelude.VarInt = Prelude.label "utf8_validation / " $ do
+    x <- Prelude.parseEnum
+    pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "utf8_validation") $ \_ -> Prelude.Just x
+  parseField 5 Prelude.VarInt = Prelude.label "message_encoding / " $ do
+    x <- Prelude.parseEnum
+    pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "message_encoding") $ \_ -> Prelude.Just x
+  parseField 6 Prelude.VarInt = Prelude.label "json_format / " $ do
+    x <- Prelude.parseEnum
+    pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "json_format") $ \_ -> Prelude.Just x
+  parseField fieldNumber wireType = Prelude.parseFieldUnknown fieldNumber wireType
+
+defaultFeatureSet :: FeatureSetR
+defaultFeatureSet =
+  { field_presence: Prelude.Nothing
+  , enum_type: Prelude.Nothing
+  , repeated_field_encoding: Prelude.Nothing
+  , utf8_validation: Prelude.Nothing
+  , message_encoding: Prelude.Nothing
+  , json_format: Prelude.Nothing
+  , __unknown_fields: []
+  }
+
+mkFeatureSet :: forall r1 r3. Prelude.Union r1 FeatureSetRow r3 => Prelude.Nub r3 FeatureSetRow => Record r1 -> FeatureSet
+mkFeatureSet r = FeatureSet $ Prelude.merge r defaultFeatureSet
+
+mergeFeatureSet :: FeatureSet -> FeatureSet -> FeatureSet
+mergeFeatureSet (FeatureSet l) (FeatureSet r) = FeatureSet
+  { field_presence: Prelude.alt l.field_presence r.field_presence
+  , enum_type: Prelude.alt l.enum_type r.enum_type
+  , repeated_field_encoding: Prelude.alt l.repeated_field_encoding r.repeated_field_encoding
+  , utf8_validation: Prelude.alt l.utf8_validation r.utf8_validation
+  , message_encoding: Prelude.alt l.message_encoding r.message_encoding
+  , json_format: Prelude.alt l.json_format r.json_format
+  , __unknown_fields: r.__unknown_fields <> l.__unknown_fields
+  }
+
+
+-- | Message generated by __protobuf__ from `google.protobuf.FeatureSetDefaults`
+-- | 
+-- | A compiled specification for the defaults of a set of features.  These
+-- | messages are generated from FeatureSet extensions and can be used to seed
+-- | feature resolution. The resolution with this object becomes a simple search
+-- | for the closest matching edition, followed by proto merges.
+newtype FeatureSetDefaults = FeatureSetDefaults FeatureSetDefaultsR
+type FeatureSetDefaultsRow =
+  ( defaults :: Array FeatureSetDefaults_FeatureSetEditionDefault
+  , minimum_edition :: Prelude.Maybe Edition
+  , maximum_edition :: Prelude.Maybe Edition
+  , __unknown_fields :: Array Prelude.UnknownField
+  )
+type FeatureSetDefaultsR = Record FeatureSetDefaultsRow
+derive instance genericFeatureSetDefaults :: Prelude.Generic FeatureSetDefaults _
+derive instance newtypeFeatureSetDefaults :: Prelude.Newtype FeatureSetDefaults _
+derive instance eqFeatureSetDefaults :: Prelude.Eq FeatureSetDefaults
+instance showFeatureSetDefaults :: Prelude.Show FeatureSetDefaults where show x = Prelude.genericShow x
+
+putFeatureSetDefaults :: forall m. Prelude.MonadEffect m => Prelude.MonadRec m => FeatureSetDefaults -> Prelude.PutM m Prelude.Unit
+putFeatureSetDefaults (FeatureSetDefaults r) = do
+  Prelude.putRepeated 1 r.defaults $ Prelude.putLenDel putFeatureSetDefaults_FeatureSetEditionDefault
+  Prelude.putOptional 4 r.minimum_edition Prelude.isDefault Prelude.putEnumField
+  Prelude.putOptional 5 r.maximum_edition Prelude.isDefault Prelude.putEnumField
+  Prelude.foldRecM (\_ x -> Prelude.putFieldUnknown x) unit r.__unknown_fields
+
+parseFeatureSetDefaults :: forall m. Prelude.MonadEffect m => Prelude.MonadRec m => Prelude.ByteLength -> Prelude.ParserT Prelude.DataView m FeatureSetDefaults
+parseFeatureSetDefaults length = Prelude.label "FeatureSetDefaults / " $
+  Prelude.parseMessage FeatureSetDefaults defaultFeatureSetDefaults parseField length
+ where
+  parseField
+    :: Prelude.FieldNumberInt
+    -> Prelude.WireType
+    -> Prelude.ParserT Prelude.DataView m (Prelude.Builder FeatureSetDefaultsR FeatureSetDefaultsR)
+  parseField 1 Prelude.LenDel = Prelude.label "defaults / " $ do
+    x <- Prelude.parseLenDel parseFeatureSetDefaults_FeatureSetEditionDefault
+    pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "defaults") $ Prelude.flip Prelude.snoc x
+  parseField 4 Prelude.VarInt = Prelude.label "minimum_edition / " $ do
+    x <- Prelude.parseEnum
+    pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "minimum_edition") $ \_ -> Prelude.Just x
+  parseField 5 Prelude.VarInt = Prelude.label "maximum_edition / " $ do
+    x <- Prelude.parseEnum
+    pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "maximum_edition") $ \_ -> Prelude.Just x
+  parseField fieldNumber wireType = Prelude.parseFieldUnknown fieldNumber wireType
+
+defaultFeatureSetDefaults :: FeatureSetDefaultsR
+defaultFeatureSetDefaults =
+  { defaults: []
+  , minimum_edition: Prelude.Nothing
+  , maximum_edition: Prelude.Nothing
+  , __unknown_fields: []
+  }
+
+mkFeatureSetDefaults :: forall r1 r3. Prelude.Union r1 FeatureSetDefaultsRow r3 => Prelude.Nub r3 FeatureSetDefaultsRow => Record r1 -> FeatureSetDefaults
+mkFeatureSetDefaults r = FeatureSetDefaults $ Prelude.merge r defaultFeatureSetDefaults
+
+mergeFeatureSetDefaults :: FeatureSetDefaults -> FeatureSetDefaults -> FeatureSetDefaults
+mergeFeatureSetDefaults (FeatureSetDefaults l) (FeatureSetDefaults r) = FeatureSetDefaults
+  { defaults: r.defaults <> l.defaults
+  , minimum_edition: Prelude.alt l.minimum_edition r.minimum_edition
+  , maximum_edition: Prelude.alt l.maximum_edition r.maximum_edition
+  , __unknown_fields: r.__unknown_fields <> l.__unknown_fields
+  }
+
+
+-- | Message generated by __protobuf__ from `google.protobuf.FeatureSetDefaults.FeatureSetEditionDefault`
+-- | 
+-- | A map from every known edition with a unique set of defaults to its
+-- | defaults. Not all editions may be contained here.  For a given edition,
+-- | the defaults at the closest matching edition ordered at or before it should
+-- | be used.  This field must be in strict ascending order by edition.
+newtype FeatureSetDefaults_FeatureSetEditionDefault = FeatureSetDefaults_FeatureSetEditionDefault FeatureSetDefaults_FeatureSetEditionDefaultR
+type FeatureSetDefaults_FeatureSetEditionDefaultRow =
+  ( edition :: Prelude.Maybe Edition
+  , overridable_features :: Prelude.Maybe FeatureSet
+  , fixed_features :: Prelude.Maybe FeatureSet
+  , __unknown_fields :: Array Prelude.UnknownField
+  )
+type FeatureSetDefaults_FeatureSetEditionDefaultR = Record FeatureSetDefaults_FeatureSetEditionDefaultRow
+derive instance genericFeatureSetDefaults_FeatureSetEditionDefault :: Prelude.Generic FeatureSetDefaults_FeatureSetEditionDefault _
+derive instance newtypeFeatureSetDefaults_FeatureSetEditionDefault :: Prelude.Newtype FeatureSetDefaults_FeatureSetEditionDefault _
+derive instance eqFeatureSetDefaults_FeatureSetEditionDefault :: Prelude.Eq FeatureSetDefaults_FeatureSetEditionDefault
+instance showFeatureSetDefaults_FeatureSetEditionDefault :: Prelude.Show FeatureSetDefaults_FeatureSetEditionDefault where show x = Prelude.genericShow x
+
+putFeatureSetDefaults_FeatureSetEditionDefault :: forall m. Prelude.MonadEffect m => Prelude.MonadRec m => FeatureSetDefaults_FeatureSetEditionDefault -> Prelude.PutM m Prelude.Unit
+putFeatureSetDefaults_FeatureSetEditionDefault (FeatureSetDefaults_FeatureSetEditionDefault r) = do
+  Prelude.putOptional 3 r.edition Prelude.isDefault Prelude.putEnumField
+  Prelude.putOptional 4 r.overridable_features (\_ -> false) $ Prelude.putLenDel putFeatureSet
+  Prelude.putOptional 5 r.fixed_features (\_ -> false) $ Prelude.putLenDel putFeatureSet
+  Prelude.foldRecM (\_ x -> Prelude.putFieldUnknown x) unit r.__unknown_fields
+
+parseFeatureSetDefaults_FeatureSetEditionDefault :: forall m. Prelude.MonadEffect m => Prelude.MonadRec m => Prelude.ByteLength -> Prelude.ParserT Prelude.DataView m FeatureSetDefaults_FeatureSetEditionDefault
+parseFeatureSetDefaults_FeatureSetEditionDefault length = Prelude.label "FeatureSetEditionDefault / " $
+  Prelude.parseMessage FeatureSetDefaults_FeatureSetEditionDefault defaultFeatureSetDefaults_FeatureSetEditionDefault parseField length
+ where
+  parseField
+    :: Prelude.FieldNumberInt
+    -> Prelude.WireType
+    -> Prelude.ParserT Prelude.DataView m (Prelude.Builder FeatureSetDefaults_FeatureSetEditionDefaultR FeatureSetDefaults_FeatureSetEditionDefaultR)
+  parseField 3 Prelude.VarInt = Prelude.label "edition / " $ do
+    x <- Prelude.parseEnum
+    pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "edition") $ \_ -> Prelude.Just x
+  parseField 4 Prelude.LenDel = Prelude.label "overridable_features / " $ do
+    x <- Prelude.parseLenDel parseFeatureSet
+    pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "overridable_features") $ Prelude.Just Prelude.<<< Prelude.maybe x (mergeFeatureSet x)
+  parseField 5 Prelude.LenDel = Prelude.label "fixed_features / " $ do
+    x <- Prelude.parseLenDel parseFeatureSet
+    pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "fixed_features") $ Prelude.Just Prelude.<<< Prelude.maybe x (mergeFeatureSet x)
+  parseField fieldNumber wireType = Prelude.parseFieldUnknown fieldNumber wireType
+
+defaultFeatureSetDefaults_FeatureSetEditionDefault :: FeatureSetDefaults_FeatureSetEditionDefaultR
+defaultFeatureSetDefaults_FeatureSetEditionDefault =
+  { edition: Prelude.Nothing
+  , overridable_features: Prelude.Nothing
+  , fixed_features: Prelude.Nothing
+  , __unknown_fields: []
+  }
+
+mkFeatureSetDefaults_FeatureSetEditionDefault :: forall r1 r3. Prelude.Union r1 FeatureSetDefaults_FeatureSetEditionDefaultRow r3 => Prelude.Nub r3 FeatureSetDefaults_FeatureSetEditionDefaultRow => Record r1 -> FeatureSetDefaults_FeatureSetEditionDefault
+mkFeatureSetDefaults_FeatureSetEditionDefault r = FeatureSetDefaults_FeatureSetEditionDefault $ Prelude.merge r defaultFeatureSetDefaults_FeatureSetEditionDefault
+
+mergeFeatureSetDefaults_FeatureSetEditionDefault :: FeatureSetDefaults_FeatureSetEditionDefault -> FeatureSetDefaults_FeatureSetEditionDefault -> FeatureSetDefaults_FeatureSetEditionDefault
+mergeFeatureSetDefaults_FeatureSetEditionDefault (FeatureSetDefaults_FeatureSetEditionDefault l) (FeatureSetDefaults_FeatureSetEditionDefault r) = FeatureSetDefaults_FeatureSetEditionDefault
+  { edition: Prelude.alt l.edition r.edition
+  , overridable_features: Prelude.mergeWith mergeFeatureSet l.overridable_features r.overridable_features
+  , fixed_features: Prelude.mergeWith mergeFeatureSet l.fixed_features r.fixed_features
   , __unknown_fields: r.__unknown_fields <> l.__unknown_fields
   }
 
@@ -2200,6 +2622,67 @@ mergeGeneratedCodeInfo_Annotation (GeneratedCodeInfo_Annotation l) (GeneratedCod
   }
 
 
+-- | Enum generated by __protobuf__ from `google.protobuf.Edition`
+-- | 
+-- | The full set of known editions.
+data Edition
+  = Edition_EDITION_UNKNOWN
+  | Edition_EDITION_LEGACY
+  | Edition_EDITION_PROTO2
+  | Edition_EDITION_PROTO3
+  | Edition_EDITION_2023
+  | Edition_EDITION_2024
+  | Edition_EDITION_1_TEST_ONLY
+  | Edition_EDITION_2_TEST_ONLY
+  | Edition_EDITION_99997_TEST_ONLY
+  | Edition_EDITION_99998_TEST_ONLY
+  | Edition_EDITION_99999_TEST_ONLY
+  | Edition_EDITION_MAX
+derive instance genericEdition :: Prelude.Generic Edition _
+derive instance eqEdition :: Prelude.Eq Edition
+instance showEdition :: Prelude.Show Edition where show = Prelude.genericShow
+instance ordEdition :: Prelude.Ord Edition where compare = Prelude.genericCompare
+instance boundedEdition :: Prelude.Bounded Edition
+ where
+  bottom = Prelude.genericBottom
+  top = Prelude.genericTop
+instance enumEdition :: Prelude.Enum Edition
+ where
+  succ = Prelude.genericSucc
+  pred = Prelude.genericPred
+instance boundedenumEdition :: Prelude.BoundedEnum Edition
+ where
+  cardinality = Prelude.genericCardinality
+  toEnum (0) = Prelude.Just Edition_EDITION_UNKNOWN
+  toEnum (900) = Prelude.Just Edition_EDITION_LEGACY
+  toEnum (998) = Prelude.Just Edition_EDITION_PROTO2
+  toEnum (999) = Prelude.Just Edition_EDITION_PROTO3
+  toEnum (1000) = Prelude.Just Edition_EDITION_2023
+  toEnum (1001) = Prelude.Just Edition_EDITION_2024
+  toEnum (1) = Prelude.Just Edition_EDITION_1_TEST_ONLY
+  toEnum (2) = Prelude.Just Edition_EDITION_2_TEST_ONLY
+  toEnum (99997) = Prelude.Just Edition_EDITION_99997_TEST_ONLY
+  toEnum (99998) = Prelude.Just Edition_EDITION_99998_TEST_ONLY
+  toEnum (99999) = Prelude.Just Edition_EDITION_99999_TEST_ONLY
+  toEnum (2147483647) = Prelude.Just Edition_EDITION_MAX
+  toEnum _ = Prelude.Nothing
+  fromEnum Edition_EDITION_UNKNOWN = (0)
+  fromEnum Edition_EDITION_LEGACY = (900)
+  fromEnum Edition_EDITION_PROTO2 = (998)
+  fromEnum Edition_EDITION_PROTO3 = (999)
+  fromEnum Edition_EDITION_2023 = (1000)
+  fromEnum Edition_EDITION_2024 = (1001)
+  fromEnum Edition_EDITION_1_TEST_ONLY = (1)
+  fromEnum Edition_EDITION_2_TEST_ONLY = (2)
+  fromEnum Edition_EDITION_99997_TEST_ONLY = (99997)
+  fromEnum Edition_EDITION_99998_TEST_ONLY = (99998)
+  fromEnum Edition_EDITION_99999_TEST_ONLY = (99999)
+  fromEnum Edition_EDITION_MAX = (2147483647)
+instance defaultEdition :: Prelude.Default Edition
+ where
+  default = Edition_EDITION_UNKNOWN
+  isDefault = eq Edition_EDITION_UNKNOWN
+
 -- | Enum generated by __protobuf__ from `google.protobuf.ExtensionRangeOptions.VerificationState`
 -- | 
 -- | The verification state of the extension range.
@@ -2311,8 +2794,8 @@ instance defaultFieldDescriptorProto_Type :: Prelude.Default FieldDescriptorProt
 -- | Enum generated by __protobuf__ from `google.protobuf.FieldDescriptorProto.Label`
 data FieldDescriptorProto_Label
   = FieldDescriptorProto_Label_LABEL_OPTIONAL
-  | FieldDescriptorProto_Label_LABEL_REQUIRED
   | FieldDescriptorProto_Label_LABEL_REPEATED
+  | FieldDescriptorProto_Label_LABEL_REQUIRED
 derive instance genericFieldDescriptorProto_Label :: Prelude.Generic FieldDescriptorProto_Label _
 derive instance eqFieldDescriptorProto_Label :: Prelude.Eq FieldDescriptorProto_Label
 instance showFieldDescriptorProto_Label :: Prelude.Show FieldDescriptorProto_Label where show = Prelude.genericShow
@@ -2329,12 +2812,12 @@ instance boundedenumFieldDescriptorProto_Label :: Prelude.BoundedEnum FieldDescr
  where
   cardinality = Prelude.genericCardinality
   toEnum (1) = Prelude.Just FieldDescriptorProto_Label_LABEL_OPTIONAL
-  toEnum (2) = Prelude.Just FieldDescriptorProto_Label_LABEL_REQUIRED
   toEnum (3) = Prelude.Just FieldDescriptorProto_Label_LABEL_REPEATED
+  toEnum (2) = Prelude.Just FieldDescriptorProto_Label_LABEL_REQUIRED
   toEnum _ = Prelude.Nothing
   fromEnum FieldDescriptorProto_Label_LABEL_OPTIONAL = (1)
-  fromEnum FieldDescriptorProto_Label_LABEL_REQUIRED = (2)
   fromEnum FieldDescriptorProto_Label_LABEL_REPEATED = (3)
+  fromEnum FieldDescriptorProto_Label_LABEL_REQUIRED = (2)
 instance defaultFieldDescriptorProto_Label :: Prelude.Default FieldDescriptorProto_Label
  where
   default = FieldDescriptorProto_Label_LABEL_OPTIONAL
@@ -2567,6 +3050,201 @@ instance defaultMethodOptions_IdempotencyLevel :: Prelude.Default MethodOptions_
  where
   default = MethodOptions_IdempotencyLevel_IDEMPOTENCY_UNKNOWN
   isDefault = eq MethodOptions_IdempotencyLevel_IDEMPOTENCY_UNKNOWN
+
+-- | Enum generated by __protobuf__ from `google.protobuf.FeatureSet.FieldPresence`
+data FeatureSet_FieldPresence
+  = FeatureSet_FieldPresence_FIELD_PRESENCE_UNKNOWN
+  | FeatureSet_FieldPresence_EXPLICIT
+  | FeatureSet_FieldPresence_IMPLICIT
+  | FeatureSet_FieldPresence_LEGACY_REQUIRED
+derive instance genericFeatureSet_FieldPresence :: Prelude.Generic FeatureSet_FieldPresence _
+derive instance eqFeatureSet_FieldPresence :: Prelude.Eq FeatureSet_FieldPresence
+instance showFeatureSet_FieldPresence :: Prelude.Show FeatureSet_FieldPresence where show = Prelude.genericShow
+instance ordFeatureSet_FieldPresence :: Prelude.Ord FeatureSet_FieldPresence where compare = Prelude.genericCompare
+instance boundedFeatureSet_FieldPresence :: Prelude.Bounded FeatureSet_FieldPresence
+ where
+  bottom = Prelude.genericBottom
+  top = Prelude.genericTop
+instance enumFeatureSet_FieldPresence :: Prelude.Enum FeatureSet_FieldPresence
+ where
+  succ = Prelude.genericSucc
+  pred = Prelude.genericPred
+instance boundedenumFeatureSet_FieldPresence :: Prelude.BoundedEnum FeatureSet_FieldPresence
+ where
+  cardinality = Prelude.genericCardinality
+  toEnum (0) = Prelude.Just FeatureSet_FieldPresence_FIELD_PRESENCE_UNKNOWN
+  toEnum (1) = Prelude.Just FeatureSet_FieldPresence_EXPLICIT
+  toEnum (2) = Prelude.Just FeatureSet_FieldPresence_IMPLICIT
+  toEnum (3) = Prelude.Just FeatureSet_FieldPresence_LEGACY_REQUIRED
+  toEnum _ = Prelude.Nothing
+  fromEnum FeatureSet_FieldPresence_FIELD_PRESENCE_UNKNOWN = (0)
+  fromEnum FeatureSet_FieldPresence_EXPLICIT = (1)
+  fromEnum FeatureSet_FieldPresence_IMPLICIT = (2)
+  fromEnum FeatureSet_FieldPresence_LEGACY_REQUIRED = (3)
+instance defaultFeatureSet_FieldPresence :: Prelude.Default FeatureSet_FieldPresence
+ where
+  default = FeatureSet_FieldPresence_FIELD_PRESENCE_UNKNOWN
+  isDefault = eq FeatureSet_FieldPresence_FIELD_PRESENCE_UNKNOWN
+
+-- | Enum generated by __protobuf__ from `google.protobuf.FeatureSet.EnumType`
+data FeatureSet_EnumType
+  = FeatureSet_EnumType_ENUM_TYPE_UNKNOWN
+  | FeatureSet_EnumType_OPEN
+  | FeatureSet_EnumType_CLOSED
+derive instance genericFeatureSet_EnumType :: Prelude.Generic FeatureSet_EnumType _
+derive instance eqFeatureSet_EnumType :: Prelude.Eq FeatureSet_EnumType
+instance showFeatureSet_EnumType :: Prelude.Show FeatureSet_EnumType where show = Prelude.genericShow
+instance ordFeatureSet_EnumType :: Prelude.Ord FeatureSet_EnumType where compare = Prelude.genericCompare
+instance boundedFeatureSet_EnumType :: Prelude.Bounded FeatureSet_EnumType
+ where
+  bottom = Prelude.genericBottom
+  top = Prelude.genericTop
+instance enumFeatureSet_EnumType :: Prelude.Enum FeatureSet_EnumType
+ where
+  succ = Prelude.genericSucc
+  pred = Prelude.genericPred
+instance boundedenumFeatureSet_EnumType :: Prelude.BoundedEnum FeatureSet_EnumType
+ where
+  cardinality = Prelude.genericCardinality
+  toEnum (0) = Prelude.Just FeatureSet_EnumType_ENUM_TYPE_UNKNOWN
+  toEnum (1) = Prelude.Just FeatureSet_EnumType_OPEN
+  toEnum (2) = Prelude.Just FeatureSet_EnumType_CLOSED
+  toEnum _ = Prelude.Nothing
+  fromEnum FeatureSet_EnumType_ENUM_TYPE_UNKNOWN = (0)
+  fromEnum FeatureSet_EnumType_OPEN = (1)
+  fromEnum FeatureSet_EnumType_CLOSED = (2)
+instance defaultFeatureSet_EnumType :: Prelude.Default FeatureSet_EnumType
+ where
+  default = FeatureSet_EnumType_ENUM_TYPE_UNKNOWN
+  isDefault = eq FeatureSet_EnumType_ENUM_TYPE_UNKNOWN
+
+-- | Enum generated by __protobuf__ from `google.protobuf.FeatureSet.RepeatedFieldEncoding`
+data FeatureSet_RepeatedFieldEncoding
+  = FeatureSet_RepeatedFieldEncoding_REPEATED_FIELD_ENCODING_UNKNOWN
+  | FeatureSet_RepeatedFieldEncoding_PACKED
+  | FeatureSet_RepeatedFieldEncoding_EXPANDED
+derive instance genericFeatureSet_RepeatedFieldEncoding :: Prelude.Generic FeatureSet_RepeatedFieldEncoding _
+derive instance eqFeatureSet_RepeatedFieldEncoding :: Prelude.Eq FeatureSet_RepeatedFieldEncoding
+instance showFeatureSet_RepeatedFieldEncoding :: Prelude.Show FeatureSet_RepeatedFieldEncoding where show = Prelude.genericShow
+instance ordFeatureSet_RepeatedFieldEncoding :: Prelude.Ord FeatureSet_RepeatedFieldEncoding where compare = Prelude.genericCompare
+instance boundedFeatureSet_RepeatedFieldEncoding :: Prelude.Bounded FeatureSet_RepeatedFieldEncoding
+ where
+  bottom = Prelude.genericBottom
+  top = Prelude.genericTop
+instance enumFeatureSet_RepeatedFieldEncoding :: Prelude.Enum FeatureSet_RepeatedFieldEncoding
+ where
+  succ = Prelude.genericSucc
+  pred = Prelude.genericPred
+instance boundedenumFeatureSet_RepeatedFieldEncoding :: Prelude.BoundedEnum FeatureSet_RepeatedFieldEncoding
+ where
+  cardinality = Prelude.genericCardinality
+  toEnum (0) = Prelude.Just FeatureSet_RepeatedFieldEncoding_REPEATED_FIELD_ENCODING_UNKNOWN
+  toEnum (1) = Prelude.Just FeatureSet_RepeatedFieldEncoding_PACKED
+  toEnum (2) = Prelude.Just FeatureSet_RepeatedFieldEncoding_EXPANDED
+  toEnum _ = Prelude.Nothing
+  fromEnum FeatureSet_RepeatedFieldEncoding_REPEATED_FIELD_ENCODING_UNKNOWN = (0)
+  fromEnum FeatureSet_RepeatedFieldEncoding_PACKED = (1)
+  fromEnum FeatureSet_RepeatedFieldEncoding_EXPANDED = (2)
+instance defaultFeatureSet_RepeatedFieldEncoding :: Prelude.Default FeatureSet_RepeatedFieldEncoding
+ where
+  default = FeatureSet_RepeatedFieldEncoding_REPEATED_FIELD_ENCODING_UNKNOWN
+  isDefault = eq FeatureSet_RepeatedFieldEncoding_REPEATED_FIELD_ENCODING_UNKNOWN
+
+-- | Enum generated by __protobuf__ from `google.protobuf.FeatureSet.Utf8Validation`
+data FeatureSet_Utf8Validation
+  = FeatureSet_Utf8Validation_UTF8_VALIDATION_UNKNOWN
+  | FeatureSet_Utf8Validation_VERIFY
+  | FeatureSet_Utf8Validation_NONE
+derive instance genericFeatureSet_Utf8Validation :: Prelude.Generic FeatureSet_Utf8Validation _
+derive instance eqFeatureSet_Utf8Validation :: Prelude.Eq FeatureSet_Utf8Validation
+instance showFeatureSet_Utf8Validation :: Prelude.Show FeatureSet_Utf8Validation where show = Prelude.genericShow
+instance ordFeatureSet_Utf8Validation :: Prelude.Ord FeatureSet_Utf8Validation where compare = Prelude.genericCompare
+instance boundedFeatureSet_Utf8Validation :: Prelude.Bounded FeatureSet_Utf8Validation
+ where
+  bottom = Prelude.genericBottom
+  top = Prelude.genericTop
+instance enumFeatureSet_Utf8Validation :: Prelude.Enum FeatureSet_Utf8Validation
+ where
+  succ = Prelude.genericSucc
+  pred = Prelude.genericPred
+instance boundedenumFeatureSet_Utf8Validation :: Prelude.BoundedEnum FeatureSet_Utf8Validation
+ where
+  cardinality = Prelude.genericCardinality
+  toEnum (0) = Prelude.Just FeatureSet_Utf8Validation_UTF8_VALIDATION_UNKNOWN
+  toEnum (2) = Prelude.Just FeatureSet_Utf8Validation_VERIFY
+  toEnum (3) = Prelude.Just FeatureSet_Utf8Validation_NONE
+  toEnum _ = Prelude.Nothing
+  fromEnum FeatureSet_Utf8Validation_UTF8_VALIDATION_UNKNOWN = (0)
+  fromEnum FeatureSet_Utf8Validation_VERIFY = (2)
+  fromEnum FeatureSet_Utf8Validation_NONE = (3)
+instance defaultFeatureSet_Utf8Validation :: Prelude.Default FeatureSet_Utf8Validation
+ where
+  default = FeatureSet_Utf8Validation_UTF8_VALIDATION_UNKNOWN
+  isDefault = eq FeatureSet_Utf8Validation_UTF8_VALIDATION_UNKNOWN
+
+-- | Enum generated by __protobuf__ from `google.protobuf.FeatureSet.MessageEncoding`
+data FeatureSet_MessageEncoding
+  = FeatureSet_MessageEncoding_MESSAGE_ENCODING_UNKNOWN
+  | FeatureSet_MessageEncoding_LENGTH_PREFIXED
+  | FeatureSet_MessageEncoding_DELIMITED
+derive instance genericFeatureSet_MessageEncoding :: Prelude.Generic FeatureSet_MessageEncoding _
+derive instance eqFeatureSet_MessageEncoding :: Prelude.Eq FeatureSet_MessageEncoding
+instance showFeatureSet_MessageEncoding :: Prelude.Show FeatureSet_MessageEncoding where show = Prelude.genericShow
+instance ordFeatureSet_MessageEncoding :: Prelude.Ord FeatureSet_MessageEncoding where compare = Prelude.genericCompare
+instance boundedFeatureSet_MessageEncoding :: Prelude.Bounded FeatureSet_MessageEncoding
+ where
+  bottom = Prelude.genericBottom
+  top = Prelude.genericTop
+instance enumFeatureSet_MessageEncoding :: Prelude.Enum FeatureSet_MessageEncoding
+ where
+  succ = Prelude.genericSucc
+  pred = Prelude.genericPred
+instance boundedenumFeatureSet_MessageEncoding :: Prelude.BoundedEnum FeatureSet_MessageEncoding
+ where
+  cardinality = Prelude.genericCardinality
+  toEnum (0) = Prelude.Just FeatureSet_MessageEncoding_MESSAGE_ENCODING_UNKNOWN
+  toEnum (1) = Prelude.Just FeatureSet_MessageEncoding_LENGTH_PREFIXED
+  toEnum (2) = Prelude.Just FeatureSet_MessageEncoding_DELIMITED
+  toEnum _ = Prelude.Nothing
+  fromEnum FeatureSet_MessageEncoding_MESSAGE_ENCODING_UNKNOWN = (0)
+  fromEnum FeatureSet_MessageEncoding_LENGTH_PREFIXED = (1)
+  fromEnum FeatureSet_MessageEncoding_DELIMITED = (2)
+instance defaultFeatureSet_MessageEncoding :: Prelude.Default FeatureSet_MessageEncoding
+ where
+  default = FeatureSet_MessageEncoding_MESSAGE_ENCODING_UNKNOWN
+  isDefault = eq FeatureSet_MessageEncoding_MESSAGE_ENCODING_UNKNOWN
+
+-- | Enum generated by __protobuf__ from `google.protobuf.FeatureSet.JsonFormat`
+data FeatureSet_JsonFormat
+  = FeatureSet_JsonFormat_JSON_FORMAT_UNKNOWN
+  | FeatureSet_JsonFormat_ALLOW
+  | FeatureSet_JsonFormat_LEGACY_BEST_EFFORT
+derive instance genericFeatureSet_JsonFormat :: Prelude.Generic FeatureSet_JsonFormat _
+derive instance eqFeatureSet_JsonFormat :: Prelude.Eq FeatureSet_JsonFormat
+instance showFeatureSet_JsonFormat :: Prelude.Show FeatureSet_JsonFormat where show = Prelude.genericShow
+instance ordFeatureSet_JsonFormat :: Prelude.Ord FeatureSet_JsonFormat where compare = Prelude.genericCompare
+instance boundedFeatureSet_JsonFormat :: Prelude.Bounded FeatureSet_JsonFormat
+ where
+  bottom = Prelude.genericBottom
+  top = Prelude.genericTop
+instance enumFeatureSet_JsonFormat :: Prelude.Enum FeatureSet_JsonFormat
+ where
+  succ = Prelude.genericSucc
+  pred = Prelude.genericPred
+instance boundedenumFeatureSet_JsonFormat :: Prelude.BoundedEnum FeatureSet_JsonFormat
+ where
+  cardinality = Prelude.genericCardinality
+  toEnum (0) = Prelude.Just FeatureSet_JsonFormat_JSON_FORMAT_UNKNOWN
+  toEnum (1) = Prelude.Just FeatureSet_JsonFormat_ALLOW
+  toEnum (2) = Prelude.Just FeatureSet_JsonFormat_LEGACY_BEST_EFFORT
+  toEnum _ = Prelude.Nothing
+  fromEnum FeatureSet_JsonFormat_JSON_FORMAT_UNKNOWN = (0)
+  fromEnum FeatureSet_JsonFormat_ALLOW = (1)
+  fromEnum FeatureSet_JsonFormat_LEGACY_BEST_EFFORT = (2)
+instance defaultFeatureSet_JsonFormat :: Prelude.Default FeatureSet_JsonFormat
+ where
+  default = FeatureSet_JsonFormat_JSON_FORMAT_UNKNOWN
+  isDefault = eq FeatureSet_JsonFormat_JSON_FORMAT_UNKNOWN
 
 -- | Enum generated by __protobuf__ from `google.protobuf.GeneratedCodeInfo.Annotation.Semantic`
 -- | 
