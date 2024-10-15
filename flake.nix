@@ -36,7 +36,7 @@
         inherit system;
         config = { };
         overlays = builtins.attrValues self.overlays ++ [
-          (prev: final: import ./nix/protobuf.nix {pkgs = prev;})
+          (prev: final: import ./nix/protobuf.nix final)
           (prev: final: {
               # This plugin path won't work because it's relative to the pwd
               protoc-gen-purescript = prev.writeScriptBin "protoc-gen-purescript" ''
