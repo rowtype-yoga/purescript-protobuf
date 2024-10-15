@@ -1,6 +1,7 @@
 # purescript-protobuf 💝
 
 [![Pursuit](http://pursuit.purescript.org/packages/purescript-protobuf/badge)](http://pursuit.purescript.org/packages/purescript-protobuf/)
+[![Maintainer: jamesdbrock](https://img.shields.io/badge/maintainer-jamesdbrock-teal.svg)](https://github.com/jamesdbrock)
 
 PureScript library and code generator for
 [Google Protocol Buffers version 3](https://protobuf.dev/programming-guides/proto3/).
