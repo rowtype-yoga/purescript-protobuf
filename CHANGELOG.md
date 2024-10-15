@@ -1,5 +1,7 @@
 # Unreleased
 
+- Bugfix #38 Add `MonadRec` constraint to `put` functions.
+
 # v4.3.0 2023-01-30
 
 - Development: purs v0.15.7, node-streams-aff v5.0.0, assorted improvements.

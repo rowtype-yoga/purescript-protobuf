@@ -31,13 +31,13 @@ derive instance newtypeVersion :: Prelude.Newtype Version _
 derive instance eqVersion :: Prelude.Eq Version
 instance showVersion :: Prelude.Show Version where show x = Prelude.genericShow x
 
-putVersion :: forall m. Prelude.MonadEffect m => Version -> Prelude.PutM m Prelude.Unit
+putVersion :: forall m. Prelude.MonadEffect m => Prelude.MonadRec m => Version -> Prelude.PutM m Prelude.Unit
 putVersion (Version r) = do
   Prelude.putOptional 1 r.major Prelude.isDefault Prelude.encodeInt32Field
   Prelude.putOptional 2 r.minor Prelude.isDefault Prelude.encodeInt32Field
   Prelude.putOptional 3 r.patch Prelude.isDefault Prelude.encodeInt32Field
   Prelude.putOptional 4 r.suffix Prelude.isDefault Prelude.encodeStringField
-  Prelude.traverse_ Prelude.putFieldUnknown r.__unknown_fields
+  Prelude.foldRecM (\_ x -> Prelude.putFieldUnknown x) unit r.__unknown_fields
 
 parseVersion :: forall m. Prelude.MonadEffect m => Prelude.MonadRec m => Prelude.ByteLength -> Prelude.ParserT Prelude.DataView m Version
 parseVersion length = Prelude.label "Version / " $
@@ -100,13 +100,13 @@ derive instance newtypeCodeGeneratorRequest :: Prelude.Newtype CodeGeneratorRequ
 derive instance eqCodeGeneratorRequest :: Prelude.Eq CodeGeneratorRequest
 instance showCodeGeneratorRequest :: Prelude.Show CodeGeneratorRequest where show x = Prelude.genericShow x
 
-putCodeGeneratorRequest :: forall m. Prelude.MonadEffect m => CodeGeneratorRequest -> Prelude.PutM m Prelude.Unit
+putCodeGeneratorRequest :: forall m. Prelude.MonadEffect m => Prelude.MonadRec m => CodeGeneratorRequest -> Prelude.PutM m Prelude.Unit
 putCodeGeneratorRequest (CodeGeneratorRequest r) = do
   Prelude.putRepeated 1 r.file_to_generate Prelude.encodeStringField
   Prelude.putOptional 2 r.parameter Prelude.isDefault Prelude.encodeStringField
   Prelude.putRepeated 15 r.proto_file $ Prelude.putLenDel Google.Protobuf.putFileDescriptorProto
   Prelude.putOptional 3 r.compiler_version (\_ -> false) $ Prelude.putLenDel putVersion
-  Prelude.traverse_ Prelude.putFieldUnknown r.__unknown_fields
+  Prelude.foldRecM (\_ x -> Prelude.putFieldUnknown x) unit r.__unknown_fields
 
 parseCodeGeneratorRequest :: forall m. Prelude.MonadEffect m => Prelude.MonadRec m => Prelude.ByteLength -> Prelude.ParserT Prelude.DataView m CodeGeneratorRequest
 parseCodeGeneratorRequest length = Prelude.label "CodeGeneratorRequest / " $
@@ -168,12 +168,12 @@ derive instance newtypeCodeGeneratorResponse :: Prelude.Newtype CodeGeneratorRes
 derive instance eqCodeGeneratorResponse :: Prelude.Eq CodeGeneratorResponse
 instance showCodeGeneratorResponse :: Prelude.Show CodeGeneratorResponse where show x = Prelude.genericShow x
 
-putCodeGeneratorResponse :: forall m. Prelude.MonadEffect m => CodeGeneratorResponse -> Prelude.PutM m Prelude.Unit
+putCodeGeneratorResponse :: forall m. Prelude.MonadEffect m => Prelude.MonadRec m => CodeGeneratorResponse -> Prelude.PutM m Prelude.Unit
 putCodeGeneratorResponse (CodeGeneratorResponse r) = do
   Prelude.putOptional 1 r.error Prelude.isDefault Prelude.encodeStringField
   Prelude.putOptional 2 r.supported_features Prelude.isDefault Prelude.encodeUint64Field
   Prelude.putRepeated 15 r.file $ Prelude.putLenDel putCodeGeneratorResponse_File
-  Prelude.traverse_ Prelude.putFieldUnknown r.__unknown_fields
+  Prelude.foldRecM (\_ x -> Prelude.putFieldUnknown x) unit r.__unknown_fields
 
 parseCodeGeneratorResponse :: forall m. Prelude.MonadEffect m => Prelude.MonadRec m => Prelude.ByteLength -> Prelude.ParserT Prelude.DataView m CodeGeneratorResponse
 parseCodeGeneratorResponse length = Prelude.label "CodeGeneratorResponse / " $
@@ -231,13 +231,13 @@ derive instance newtypeCodeGeneratorResponse_File :: Prelude.Newtype CodeGenerat
 derive instance eqCodeGeneratorResponse_File :: Prelude.Eq CodeGeneratorResponse_File
 instance showCodeGeneratorResponse_File :: Prelude.Show CodeGeneratorResponse_File where show x = Prelude.genericShow x
 
-putCodeGeneratorResponse_File :: forall m. Prelude.MonadEffect m => CodeGeneratorResponse_File -> Prelude.PutM m Prelude.Unit
+putCodeGeneratorResponse_File :: forall m. Prelude.MonadEffect m => Prelude.MonadRec m => CodeGeneratorResponse_File -> Prelude.PutM m Prelude.Unit
 putCodeGeneratorResponse_File (CodeGeneratorResponse_File r) = do
   Prelude.putOptional 1 r.name Prelude.isDefault Prelude.encodeStringField
   Prelude.putOptional 2 r.insertion_point Prelude.isDefault Prelude.encodeStringField
   Prelude.putOptional 15 r.content Prelude.isDefault Prelude.encodeStringField
   Prelude.putOptional 16 r.generated_code_info (\_ -> false) $ Prelude.putLenDel Google.Protobuf.putGeneratedCodeInfo
-  Prelude.traverse_ Prelude.putFieldUnknown r.__unknown_fields
+  Prelude.foldRecM (\_ x -> Prelude.putFieldUnknown x) unit r.__unknown_fields
 
 parseCodeGeneratorResponse_File :: forall m. Prelude.MonadEffect m => Prelude.MonadRec m => Prelude.ByteLength -> Prelude.ParserT Prelude.DataView m CodeGeneratorResponse_File
 parseCodeGeneratorResponse_File length = Prelude.label "File / " $

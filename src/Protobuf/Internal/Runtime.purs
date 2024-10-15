@@ -21,12 +21,12 @@ import Prelude
 
 import Control.Monad.Rec.Class (class MonadRec, tailRecM, Step(..))
 import Control.Monad.Trans.Class (lift)
-import Data.Array (snoc)
+import Data.Array (snoc, foldRecM)
 import Data.Array as Array
 import Data.ArrayBuffer.Builder (DataBuff(..), PutM, subBuilder)
 import Data.ArrayBuffer.Types (DataView, ByteLength)
 import Data.Enum (class BoundedEnum, fromEnum, toEnum)
-import Data.Foldable (foldl, traverse_)
+import Data.Foldable (foldl)
 import Data.Generic.Rep (class Generic)
 import Data.Int64 as Int64
 import Data.List (List, (:))
@@ -207,15 +207,19 @@ putOptional fieldNumber (Just x) isDefault encoder = do
 putRepeated ::
   forall m a.
   MonadEffect m =>
+  MonadRec m =>
   FieldNumberInt ->
   Array a ->
   (FieldNumber -> a -> PutM m Unit) ->
   PutM m Unit
-putRepeated fieldNumber xs encoder = flip traverse_ xs $ encoder $ UInt.fromInt fieldNumber
+putRepeated fieldNumber xs encoder = foldRecM (\_ x -> encoder fn x) unit xs
+  where
+    fn = UInt.fromInt fieldNumber
 
 putPacked ::
   forall m a.
   MonadEffect m =>
+  MonadRec m =>
   FieldNumberInt ->
   Array a ->
   (a -> PutM m Unit) ->
@@ -223,7 +227,7 @@ putPacked ::
 putPacked _ [] _ = pure unit
 
 putPacked fieldNumber xs encoder = do
-  b <- subBuilder $ traverse_ encoder xs
+  b <- subBuilder $ foldRecM (\_ x -> encoder x) unit xs
   Encode.encodeBuilder (UInt.fromInt fieldNumber) b
 
 putEnumField ::

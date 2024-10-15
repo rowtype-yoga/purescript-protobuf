@@ -24,16 +24,17 @@ import Data.UInt64 (UInt64)
 import Data.UInt64 as UInt64
 import Data.Unfoldable (replicate)
 import Effect (Effect)
-import Protobuf.Internal.Decode as Decode
-import Protobuf.Library (Bytes(..))
-import Test.Assert (assert')
-import Parsing (runParserT)
-import Web.Encoding.TextEncoder as TextEncoder
+-- import Effect.Console as Console
 import Pack.Msg1 as Pack1
 import Pack.Msg2 as Pack2
 import Pack3.Msg3 as Pack3
 import Pack4.Msg4 as Pack4
 import Pack5.Msg5 as Pack5
+import Parsing (runParserT)
+import Protobuf.Internal.Decode as Decode
+import Protobuf.Library (Bytes(..))
+import Test.Assert (assert')
+import Web.Encoding.TextEncoder as TextEncoder
 
 billion' :: Int
 billion' = -1000000000
@@ -88,7 +89,7 @@ main = do
     Right msg1' -> assert' "msg1 roundtrip" $ msg1 == msg1'
 
   let msg2 = (Pack2.mkMsg2
-    { f1: replicate 3 1234.5
+    { f1: replicate 10000 1234.5
     , f2: catMaybes [Float32.fromNumber 345.6, Float32.fromNumber 345.6]
     , f3: replicate 3 billion'
     , f4: replicate 3 billion2'

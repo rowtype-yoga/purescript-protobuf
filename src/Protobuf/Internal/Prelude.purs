@@ -22,7 +22,6 @@ module Protobuf.Internal.Prelude
   , module Data.String
   , module Type.Proxy
   , module Record
-  , module Data.Traversable
   , module Data.Tuple
   , module Data.UInt
   , module Prim.Row
@@ -42,7 +41,7 @@ module Protobuf.Internal.Prelude
 import Type.Proxy (Proxy(..))
 import Control.Alt (alt)
 import Control.Monad.Rec.Class (class MonadRec) as MonadRec.Class
-import Data.Array (snoc)
+import Data.Array (snoc, foldRecM)
 import Data.ArrayBuffer.Builder (PutM)
 import Data.ArrayBuffer.Types (DataView, ByteLength)
 import Data.Bounded (class Bounded)
@@ -63,7 +62,6 @@ import Data.Ord (class Ord)
 import Data.Semigroup ((<>))
 import Data.Show (class Show)
 import Data.String (joinWith)
-import Data.Traversable (traverse_)
 import Data.Tuple (Tuple(..))
 import Data.UInt (toInt, fromInt, UInt)
 import Effect.Class (class MonadEffect) as Effect.Class

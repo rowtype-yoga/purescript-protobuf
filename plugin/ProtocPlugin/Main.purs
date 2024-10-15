@@ -1303,12 +1303,12 @@ genFile proto_file ( FileDescriptorProto
               -- https://github.com/purescript/purescript/issues/2975#issuecomment-313650710
               , Right $ "instance show" <> tname <> " :: Prelude.Show " <> tname <> " where show x = Prelude.genericShow x"
               , Right ""
-              , Right $ "put" <> tname <> " :: forall m. Prelude.MonadEffect m => " <> tname <> " -> Prelude.PutM m Prelude.Unit"
+              , Right $ "put" <> tname <> " :: forall m. Prelude.MonadEffect m => Prelude.MonadRec m => " <> tname <> " -> Prelude.PutM m Prelude.Unit"
               , Right $ "put" <> tname <> " (" <> tname <> " r) = do"
               , map (String.joinWith "\n")
                   $ (traverse (genFieldPut nameSpace) fields_singular)
                   <> (sequence $ map (genOneofPut (nameSpace <> [ msgName ])) oneof_decl_fields)
-              , Right "  Prelude.traverse_ Prelude.putFieldUnknown r.__unknown_fields"
+              , Right "  Prelude.foldRecM (\\_ x -> Prelude.putFieldUnknown x) unit r.__unknown_fields"
               , Right ""
               , Right $ "parse" <> tname <> " :: forall m. Prelude.MonadEffect m => Prelude.MonadRec m => Prelude.ByteLength -> Prelude.ParserT Prelude.DataView m " <> tname
               , Right $ "parse" <> tname <> " length = Prelude.label \"" <> msgName <> " / \" $"
