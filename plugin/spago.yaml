@@ -1,0 +1,27 @@
+workspace:
+  packageSet:
+    registry: 60.5.1
+  extraPackages:
+    protobuf:
+      path: ../library
+package:
+  name: protoc-plugin
+  dependencies:
+    - protobuf
+    - aff
+    - node-buffer
+    - node-path
+    - node-process
+    - node-streams
+    - console
+    - unicode
+    - unsafe-coerce
+
+  test:
+    main: Test.Main
+    dependencies:
+      - assert
+      - minibench
+      - console
+      - unfoldable
+      - numbers

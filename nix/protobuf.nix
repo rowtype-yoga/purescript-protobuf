@@ -74,6 +74,27 @@ let
       fetchSubmodules = true;
     };
   };
+  protobuf_repo_v24_4 = rec {
+    ref = "v24.4";
+    src = pkgs.fetchFromGitHub {
+      owner = "protocolbuffers";
+      repo = "protobuf";
+      rev = "v24.4";
+      hash = "sha256-7T6RfSJcKYPaUgmU9SWN99d4sdZDzRUg49cy7H6NWFI=";
+      fetchSubmodules = true;
+    };
+  };
+  protobuf_repo_v28_2= rec {
+    ref = "v28.2";
+    src = pkgs.fetchFromGitHub {
+      owner = "protocolbuffers";
+      repo = "protobuf";
+      rev = "v28.2";
+      hash = "sha256-oRomRjmxsil2XcAQ8jbeQ2f34/Uuxe6DIaAswKgbVWQ=";
+      fetchSubmodules = true;
+    };
+  };
+
 
   # Builds `protoc`, plus the conformance test runners, and also copies
   # in the .proto files for the conformance test protocol,
@@ -163,15 +184,6 @@ let
     };
   };
 
-in
-{
-  inherit protobuf_repo_v3_9_2;
-  inherit protobuf_repo_v3_14_0;
-  inherit protobuf_repo_v3_15_8;
-  inherit protobuf_repo_v3_20_1;
-  inherit protobuf_repo_v3_21_0;
-  inherit protobuf_repo_v21_10;
-  inherit protobuf_repo_v23_2;
   protobuf_v3_9_2 = mkProtobuf protobuf_repo_v3_9_2;
   protobuf_v3_14_0 = mkProtobuf protobuf_repo_v3_14_0;
   protobuf_v3_15_8 = mkProtobuf protobuf_repo_v3_15_8;
@@ -179,6 +191,20 @@ in
   protobuf_v3_21_0 = mkProtobuf protobuf_repo_v3_21_0;
   protobuf_v21_10 = mkProtobuf protobuf_repo_v21_10;
   protobuf_v23_2 = cmakeProtobuf protobuf_repo_v23_2;
+  protobuf_v24_4 = cmakeProtobuf protobuf_repo_v24_4;
+  protobuf_v28_2 = cmakeProtobuf protobuf_repo_v28_2;
+in
+{
+  inherit protobuf_v3_9_2;
+  inherit protobuf_v3_14_0;
+  inherit protobuf_v3_15_8;
+  inherit protobuf_v3_20_1;
+  inherit protobuf_v3_21_0;
+  inherit protobuf_v21_10;
+  inherit protobuf_v23_2;
+  inherit protobuf_v24_4;
+  inherit protobuf_v28_2;
+  protobuf = protobuf_v28_2;
 }
 
 

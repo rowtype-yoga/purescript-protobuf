@@ -1,0 +1,39 @@
+
+# https://github.com/purescript/spago#polyrepo-support
+
+package:
+  name: protobuf
+  publish:
+    license: MIT
+    version: 4.4.0
+    location:
+      githubOwner: rowtype-yoga
+      githubRepo: purescript-protobuf
+  dependencies:
+    - arraybuffer: ">=13.1.1 <14.0.0"
+    - arraybuffer-builder: ">=3.1.0 <4.0.0"
+    - arraybuffer-types: ">=3.0.2 <4.0.0"
+    - arrays: ">=7.2.0 <8.0.0"
+    - control: ">=6.0.0 <7.0.0"
+    - effect: ">=4.0.0 <5.0.0"
+    - either: ">=6.1.0 <7.0.0"
+    - exceptions: ">=6.0.0 <7.0.0"
+    - float32: ">=2.0.0 <3.0.0"
+    - foldable-traversable: ">=6.0.0 <7.0.0"
+    - functions: ">=6.0.0 <7.0.0"
+    - int64: ">=3.0.0 <4.0.0"
+    - lists: ">=7.0.0 <8.0.0"
+    - maybe: ">=6.0.0 <7.0.0"
+    - newtype: ">=5.0.0 <6.0.0"
+    - parsing: ">=10.2.0 <11.0.0"
+    - parsing-dataview: ">=3.2.4 <4.0.0"
+    - prelude: ">=6.0.1 <7.0.0"
+    - record: ">=4.0.0 <5.0.0"
+    - strings: ">=6.0.1 <7.0.0"
+    - tailrec: ">=6.1.0 <7.0.0"
+    - transformers: ">=6.0.0 <7.0.0"
+    - tuples: ">=7.0.0 <8.0.0"
+    - uint: ">=7.0.0 <8.0.0"
+    - web-encoding: ">=3.0.0 <4.0.0"
+
+workspace: {}
