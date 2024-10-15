@@ -17,21 +17,6 @@
 
       forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
 
-      # library-overlay = prev: final: {
-      #   protobuf-library = prev.stdenv.mkDerivation {
-      #     name = "purescript-protobuf";
-      #     src = ./library/spago.lock;
-      #     phases = ["installPhase"];
-      #     # json = builtins.fromJSON (builtins.readFile src);
-      #     installPhase = ''
-      #       mkdir -p $out
-      #       cp -R $src $out/spago.lock
-      #       ls -l $out/
-      #       echo "TEST"
-      #       '';
-      #   };
-      # };
-
       nixpkgsFor = forAllSystems (system: import nixpkgs {
         inherit system;
         config = { };
@@ -39,6 +24,7 @@
           (prev: final: import ./nix/protobuf.nix final)
           (prev: final: {
               # This plugin path won't work because it's relative to the pwd
+              # We need https://github.com/jeslie0/mkSpagoDerivation
               protoc-gen-purescript = prev.writeScriptBin "protoc-gen-purescript" ''
                 ${prev.nodejs}/bin/node --input-type=module -e "import {main} from './plugin/output/ProtocPlugin.Main/index.js'; main();"
               '';
@@ -67,7 +53,8 @@
 
       packages = forAllSystems (system:
         let pkgs = nixpkgsFor.${system}; in {
-          protobuf = pkgs.protobuf_v28_2;
+          # protobuf = pkgs.protobuf_v28_2;
+          # spagolock2nix = (pkgs.callPackage ./nix/spagolock2nix.nix {} (builtins.readFile ./library/spago.lock));
         });
 
       devShells = forAllSystems (system:
@@ -88,6 +75,7 @@
               # protobuf-library
               conformance-purescript
               conformance-run
+              # (pkgs.callPackage ./nix/spagolock2nix.nix {} (builtins.readFile ./library/spago.lock))
             ];
 
             shellHook = ''
