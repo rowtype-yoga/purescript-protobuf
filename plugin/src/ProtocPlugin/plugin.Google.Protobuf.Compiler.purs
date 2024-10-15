@@ -91,6 +91,7 @@ type CodeGeneratorRequestRow =
   ( file_to_generate :: Array String
   , parameter :: Prelude.Maybe String
   , proto_file :: Array Google.Protobuf.FileDescriptorProto
+  , source_file_descriptors :: Array Google.Protobuf.FileDescriptorProto
   , compiler_version :: Prelude.Maybe Version
   , __unknown_fields :: Array Prelude.UnknownField
   )
@@ -105,6 +106,7 @@ putCodeGeneratorRequest (CodeGeneratorRequest r) = do
   Prelude.putRepeated 1 r.file_to_generate Prelude.encodeStringField
   Prelude.putOptional 2 r.parameter Prelude.isDefault Prelude.encodeStringField
   Prelude.putRepeated 15 r.proto_file $ Prelude.putLenDel Google.Protobuf.putFileDescriptorProto
+  Prelude.putRepeated 17 r.source_file_descriptors $ Prelude.putLenDel Google.Protobuf.putFileDescriptorProto
   Prelude.putOptional 3 r.compiler_version (\_ -> false) $ Prelude.putLenDel putVersion
   Prelude.foldRecM (\_ x -> Prelude.putFieldUnknown x) unit r.__unknown_fields
 
@@ -125,6 +127,9 @@ parseCodeGeneratorRequest length = Prelude.label "CodeGeneratorRequest / " $
   parseField 15 Prelude.LenDel = Prelude.label "proto_file / " $ do
     x <- Prelude.parseLenDel Google.Protobuf.parseFileDescriptorProto
     pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "proto_file") $ Prelude.flip Prelude.snoc x
+  parseField 17 Prelude.LenDel = Prelude.label "source_file_descriptors / " $ do
+    x <- Prelude.parseLenDel Google.Protobuf.parseFileDescriptorProto
+    pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "source_file_descriptors") $ Prelude.flip Prelude.snoc x
   parseField 3 Prelude.LenDel = Prelude.label "compiler_version / " $ do
     x <- Prelude.parseLenDel parseVersion
     pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "compiler_version") $ Prelude.Just Prelude.<<< Prelude.maybe x (mergeVersion x)
@@ -135,6 +140,7 @@ defaultCodeGeneratorRequest =
   { file_to_generate: []
   , parameter: Prelude.Nothing
   , proto_file: []
+  , source_file_descriptors: []
   , compiler_version: Prelude.Nothing
   , __unknown_fields: []
   }
@@ -147,6 +153,7 @@ mergeCodeGeneratorRequest (CodeGeneratorRequest l) (CodeGeneratorRequest r) = Co
   { file_to_generate: r.file_to_generate <> l.file_to_generate
   , parameter: Prelude.alt l.parameter r.parameter
   , proto_file: r.proto_file <> l.proto_file
+  , source_file_descriptors: r.source_file_descriptors <> l.source_file_descriptors
   , compiler_version: Prelude.mergeWith mergeVersion l.compiler_version r.compiler_version
   , __unknown_fields: r.__unknown_fields <> l.__unknown_fields
   }
@@ -159,6 +166,8 @@ newtype CodeGeneratorResponse = CodeGeneratorResponse CodeGeneratorResponseR
 type CodeGeneratorResponseRow =
   ( error :: Prelude.Maybe String
   , supported_features :: Prelude.Maybe Prelude.UInt64
+  , minimum_edition :: Prelude.Maybe Int
+  , maximum_edition :: Prelude.Maybe Int
   , file :: Array CodeGeneratorResponse_File
   , __unknown_fields :: Array Prelude.UnknownField
   )
@@ -172,6 +181,8 @@ putCodeGeneratorResponse :: forall m. Prelude.MonadEffect m => Prelude.MonadRec 
 putCodeGeneratorResponse (CodeGeneratorResponse r) = do
   Prelude.putOptional 1 r.error Prelude.isDefault Prelude.encodeStringField
   Prelude.putOptional 2 r.supported_features Prelude.isDefault Prelude.encodeUint64Field
+  Prelude.putOptional 3 r.minimum_edition Prelude.isDefault Prelude.encodeInt32Field
+  Prelude.putOptional 4 r.maximum_edition Prelude.isDefault Prelude.encodeInt32Field
   Prelude.putRepeated 15 r.file $ Prelude.putLenDel putCodeGeneratorResponse_File
   Prelude.foldRecM (\_ x -> Prelude.putFieldUnknown x) unit r.__unknown_fields
 
@@ -189,6 +200,12 @@ parseCodeGeneratorResponse length = Prelude.label "CodeGeneratorResponse / " $
   parseField 2 Prelude.VarInt = Prelude.label "supported_features / " $ do
     x <- Prelude.decodeUint64
     pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "supported_features") $ \_ -> Prelude.Just x
+  parseField 3 Prelude.VarInt = Prelude.label "minimum_edition / " $ do
+    x <- Prelude.decodeInt32
+    pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "minimum_edition") $ \_ -> Prelude.Just x
+  parseField 4 Prelude.VarInt = Prelude.label "maximum_edition / " $ do
+    x <- Prelude.decodeInt32
+    pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "maximum_edition") $ \_ -> Prelude.Just x
   parseField 15 Prelude.LenDel = Prelude.label "file / " $ do
     x <- Prelude.parseLenDel parseCodeGeneratorResponse_File
     pure $ Prelude.modify (Prelude.Proxy :: Prelude.Proxy "file") $ Prelude.flip Prelude.snoc x
@@ -198,6 +215,8 @@ defaultCodeGeneratorResponse :: CodeGeneratorResponseR
 defaultCodeGeneratorResponse =
   { error: Prelude.Nothing
   , supported_features: Prelude.Nothing
+  , minimum_edition: Prelude.Nothing
+  , maximum_edition: Prelude.Nothing
   , file: []
   , __unknown_fields: []
   }
@@ -209,6 +228,8 @@ mergeCodeGeneratorResponse :: CodeGeneratorResponse -> CodeGeneratorResponse -> 
 mergeCodeGeneratorResponse (CodeGeneratorResponse l) (CodeGeneratorResponse r) = CodeGeneratorResponse
   { error: Prelude.alt l.error r.error
   , supported_features: Prelude.alt l.supported_features r.supported_features
+  , minimum_edition: Prelude.alt l.minimum_edition r.minimum_edition
+  , maximum_edition: Prelude.alt l.maximum_edition r.maximum_edition
   , file: r.file <> l.file
   , __unknown_fields: r.__unknown_fields <> l.__unknown_fields
   }
@@ -289,6 +310,7 @@ mergeCodeGeneratorResponse_File (CodeGeneratorResponse_File l) (CodeGeneratorRes
 data CodeGeneratorResponse_Feature
   = CodeGeneratorResponse_Feature_FEATURE_NONE
   | CodeGeneratorResponse_Feature_FEATURE_PROTO3_OPTIONAL
+  | CodeGeneratorResponse_Feature_FEATURE_SUPPORTS_EDITIONS
 derive instance genericCodeGeneratorResponse_Feature :: Prelude.Generic CodeGeneratorResponse_Feature _
 derive instance eqCodeGeneratorResponse_Feature :: Prelude.Eq CodeGeneratorResponse_Feature
 instance showCodeGeneratorResponse_Feature :: Prelude.Show CodeGeneratorResponse_Feature where show = Prelude.genericShow
@@ -306,9 +328,11 @@ instance boundedenumCodeGeneratorResponse_Feature :: Prelude.BoundedEnum CodeGen
   cardinality = Prelude.genericCardinality
   toEnum (0) = Prelude.Just CodeGeneratorResponse_Feature_FEATURE_NONE
   toEnum (1) = Prelude.Just CodeGeneratorResponse_Feature_FEATURE_PROTO3_OPTIONAL
+  toEnum (2) = Prelude.Just CodeGeneratorResponse_Feature_FEATURE_SUPPORTS_EDITIONS
   toEnum _ = Prelude.Nothing
   fromEnum CodeGeneratorResponse_Feature_FEATURE_NONE = (0)
   fromEnum CodeGeneratorResponse_Feature_FEATURE_PROTO3_OPTIONAL = (1)
+  fromEnum CodeGeneratorResponse_Feature_FEATURE_SUPPORTS_EDITIONS = (2)
 instance defaultCodeGeneratorResponse_Feature :: Prelude.Default CodeGeneratorResponse_Feature
  where
   default = CodeGeneratorResponse_Feature_FEATURE_NONE
