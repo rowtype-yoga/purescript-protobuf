@@ -32,7 +32,7 @@ We do not support
 
 In this version, we pass all 651 of the
 [Google conformance tests](https://github.com/protocolbuffers/protobuf/tree/main/conformance)
-of binary-wire-format *proto3* for [Protocol Buffers v23.2](https://github.com/protocolbuffers/protobuf/releases/).
+of binary-wire-format *proto3* for [Protocol Buffers v28.2](https://github.com/protocolbuffers/protobuf/releases/).
 See the `conformance/README.md` in this repository for details.
 
 We also have our own unit tests, see `test/README.md` in this repository.
