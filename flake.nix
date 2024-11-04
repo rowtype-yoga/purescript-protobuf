@@ -1,5 +1,9 @@
 {
   description = "PureScript Protobuf";
+
+  # for mkSpagoDerivation
+  nixConfig.sandbox = "relaxed";
+
   inputs = {
     nixpkgs.url = github:NixOS/nixpkgs/nixos-24.05;
     flake-utils = {
@@ -7,6 +11,10 @@
     };
     purescript-overlay = {
       url = "github:thomashoneyman/purescript-overlay";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    mkSpagoDerivation = {
+      url = "github:jeslie0/mkSpagoDerivation";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
@@ -17,21 +25,17 @@
 
       forAllSystems = nixpkgs.lib.genAttrs supportedSystems;
 
+      library-src = ./library/src;
+
       nixpkgsFor = forAllSystems (system: import nixpkgs {
         inherit system;
         config = { };
         overlays = builtins.attrValues self.overlays ++ [
+          # inputs.purescript-overlay.${system}.overlays.default
+          # inputs.mkSpagoDerivation.${system}.overlays.default
           (prev: final: import ./nix/protobuf.nix final)
           (prev: final: {
-              # This plugin path won't work because it's relative to the pwd
-              # We need https://github.com/jeslie0/mkSpagoDerivation
-              protoc-gen-purescript = prev.writeScriptBin "protoc-gen-purescript" ''
-                ${prev.nodejs}/bin/node --input-type=module -e "import {main} from './plugin/output/ProtocPlugin.Main/index.js'; main();"
-              '';
-              # This plugin path won't work because it's relative to the pwd
-              conformance-purescript = prev.writeScriptBin "conformance-purescript" ''
-                ${prev.nodejs}/bin/node --input-type=module -e "import {main} from './conformance/output/Main/index.js'; main();"
-              '';
+
             }
           )
           (prev: final: {
@@ -42,19 +46,73 @@
                 '';
             }
           )
-          # library-overlay
+
+          (prev: final: {
+            purescript-protobuf-library = prev.mkSpagoDerivation {
+              name = "purescript-protobuf-library";
+              src = ./library;
+              nativeBuildInputs = with prev; [ purs spago-unstable ];
+              buildPhase = "spago build";
+              installPhase = "mkdir $out; cp -r output/* $out/";
+            };
+          })
+          (prev: final: {
+            purescript-protobuf-plugin = prev.mkSpagoDerivation {
+              name = "purescript-protobuf-plugin";
+              src = ./plugin;
+              nativeBuildInputs = with prev; [ purs spago-unstable purs-backend-es esbuild];
+              buildPhase = ''
+                spago build --purs-args '${prev.purescript-protobuf-library.src}/src/**/*.purs'
+                '';
+                # spago build --purs-args '${prev.purescript-protobuf-library.src}/**/*.purs'
+                # purs-backend-es bundle-app --no-build --platform node --minify --output-dir output --main ProtocPlugin.Main
+                # spago bundle --offline --pure --platform node --bundle-type app --minify --module ProtocPlugin.Main --purs-args '${prev.purescript-protobuf-library.src}/**/*.purs'
+              installPhase = "mkdir $out; cp -r output/* $out/";
+            };
+          })
+          (prev: final: {
+              # protoc-gen-purescript = prev.writeScriptBin "protoc-gen-purescript" ''
+              #   ${prev.nodejs}/bin/node --input-type=module -e "import {main} from '${final.purescript-protobuf-plugin}/index.js'; main();"
+              # '';
+              protoc-gen-purescript = prev.writeScriptBin "protoc-gen-purescript" ''
+                ${prev.nodejs}/bin/node --input-type=module -e "import {main} from '${final.purescript-protobuf-plugin}/ProtocPlugin.Main/index.js'; main();"
+              '';
+              # conformance-purescript = prev.writeScriptBin "conformance-purescript" ''
+              #   ${prev.nodejs}/bin/node --input-type=module -e "import {main} from './conformance/output/Main/index.js'; main();"
+              # '';
+            }
+          )
         ];
       });
 
     in {
       overlays = {
         purescript = inputs.purescript-overlay.overlays.default;
+        mkSpagoDerivation = inputs.mkSpagoDerivation.overlays.default;
       };
 
       packages = forAllSystems (system:
         let pkgs = nixpkgsFor.${system}; in {
+          purescript-protobuf-plugin = pkgs.purescript-protobuf-plugin;
+          purescript-protobuf-library = pkgs.purescript-protobuf-library;
+          protoc-gen-purescript = pkgs.protoc-gen-purescript;
           # protobuf = pkgs.protobuf_v28_2;
           # spagolock2nix = (pkgs.callPackage ./nix/spagolock2nix.nix {} (builtins.readFile ./library/spago.lock));
+
+          # my-protobuf-library = pkgs.mkSpagoDerivation {
+          #   name = "my-protobuf-library";
+          #   # spagoYaml = ./library/spago.yaml;
+          #   # spagoLock = ./library/spago.lock;
+          #   src = ./library;
+          #   nativeBuildInputs = with pkgs; [ purs spago-unstable ];
+          #   # version = "0.1.0";
+          #   buildPhase = "spago build";
+          #   installPhase = "mkdir $out; cp -r output $out";
+          # };
+
+          # test = pkgs.stdenv.mkDerivation {
+          #   name = "test";
+          # };
         });
 
       devShells = forAllSystems (system:
@@ -71,11 +129,14 @@
               purescript-language-server
               nodejs
               protobuf
-              protoc-gen-purescript
+              esbuild
+              # protoc-gen-purescript
               # protobuf-library
-              conformance-purescript
-              conformance-run
+              # conformance-purescript
+              # conformance-run
               # (pkgs.callPackage ./nix/spagolock2nix.nix {} (builtins.readFile ./library/spago.lock))
+              # my-protobuf-library
+              protoc-gen-purescript
             ];
 
             shellHook = ''
