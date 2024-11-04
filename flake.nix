@@ -38,14 +38,14 @@
 
             }
           )
-          (prev: final: {
-              conformance-run = prev.writeScriptBin "conformance-run" ''
-                set -e
-                set -x
-                ${final.protobuf}/bin/conformance_test_runner --enforce_recommended ${final.conformance-purescript}/bin/conformance-purescript
-                '';
-            }
-          )
+          # (prev: final: {
+          #     conformance-run = prev.writeScriptBin "conformance-run" ''
+          #       set -e
+          #       set -x
+          #       ${final.protobuf}/bin/conformance_test_runner --enforce_recommended ${final.conformance-purescript}/bin/conformance-purescript
+          #       '';
+          #   }
+          # )
 
           (prev: final: {
             purescript-protobuf-library = prev.mkSpagoDerivation {
@@ -71,15 +71,26 @@
             };
           })
           (prev: final: {
+            purescript-protobuf-conformance = prev.mkSpagoDerivation {
+              name = "purescript-protobuf-conformance";
+              src = ./conformance;
+              nativeBuildInputs = with prev; [ purs spago-unstable purs-backend-es esbuild];
+              buildPhase = ''
+                spago build --purs-args '${prev.purescript-protobuf-library.src}/src/**/*.purs'
+                '';
+              installPhase = "mkdir $out; cp -r output/* $out/";
+            };
+          })
+          (prev: final: {
               # protoc-gen-purescript = prev.writeScriptBin "protoc-gen-purescript" ''
               #   ${prev.nodejs}/bin/node --input-type=module -e "import {main} from '${final.purescript-protobuf-plugin}/index.js'; main();"
               # '';
               protoc-gen-purescript = prev.writeScriptBin "protoc-gen-purescript" ''
                 ${prev.nodejs}/bin/node --input-type=module -e "import {main} from '${final.purescript-protobuf-plugin}/ProtocPlugin.Main/index.js'; main();"
               '';
-              # conformance-purescript = prev.writeScriptBin "conformance-purescript" ''
-              #   ${prev.nodejs}/bin/node --input-type=module -e "import {main} from './conformance/output/Main/index.js'; main();"
-              # '';
+              conformance-purescript = prev.writeScriptBin "conformance-purescript" ''
+                ${prev.nodejs}/bin/node --abort-on-uncaught-exception --trace-sigint --trace-uncaught --input-type=module -e "import {main} from '${final.purescript-protobuf-conformance}/Main/index.js'; main();"
+              '';
             }
           )
         ];
@@ -96,6 +107,7 @@
           purescript-protobuf-plugin = pkgs.purescript-protobuf-plugin;
           purescript-protobuf-library = pkgs.purescript-protobuf-library;
           protoc-gen-purescript = pkgs.protoc-gen-purescript;
+          conformance-purescript = pkgs.conformance-purescript;
           # protobuf = pkgs.protobuf_v28_2;
           # spagolock2nix = (pkgs.callPackage ./nix/spagolock2nix.nix {} (builtins.readFile ./library/spago.lock));
 
@@ -132,7 +144,7 @@
               esbuild
               # protoc-gen-purescript
               # protobuf-library
-              # conformance-purescript
+              conformance-purescript
               # conformance-run
               # (pkgs.callPackage ./nix/spagolock2nix.nix {} (builtins.readFile ./library/spago.lock))
               # my-protobuf-library
@@ -145,10 +157,12 @@
               export PURS_IDE_SOURCES=$(pushd plugin;${pkgs.spago-unstable}/bin/spago sources;popd)
               echo "PureScript Protobuf development environment"
               protoc --version
-              echo -n "purs "
-              purs --version
               echo -n "node "
               node --version
+              echo -n "purs "
+              purs --version
+              echo -n "spago "
+              spago --version
               echo ""
               echo "To build the protoc compiler plugin, run:"
               echo ""
@@ -160,7 +174,38 @@
               echo ""'';
           };
         });
-  };
+
+
+      apps = forAllSystems (system:
+        # pkgs now has access to the standard PureScript toolchain
+        let pkgs = nixpkgsFor.${system}; in {
+          # protoc = {
+          #   type = "app";
+          #   program = "${pkgs.protobuf}/bin/protoc";
+          # };
+          # protoc-gen-purescript = {
+          #   type = "app";
+          #   program = "${pkgs.protoc-gen-purescript}/bin/protoc-gen-purescript";
+          # };
+          # conformance_test_runner = {
+          #   type = "app";
+          #   program = "${pkgs.protobuf}/bin/conformance_test_runner";
+          # };
+          conformance =
+            let
+              conformance-run = pkgs.writeScriptBin "conformance" ''
+                set -e
+                set -x
+                ${pkgs.protobuf}/bin/conformance_test_runner --enforce_recommended ${pkgs.conformance-purescript}/bin/conformance-purescript
+                '';
+            in
+            {
+              type = "app";
+              program = "${conformance-run}/bin/conformance";
+            };
+        }
+      );
+    };
 }
 
 

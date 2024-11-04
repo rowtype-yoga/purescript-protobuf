@@ -17,3 +17,10 @@
 workspace:
   packageSet:
     registry: 60.5.1
+  extraPackages:
+    protobuf:
+      path: ./library
+    protoc-plugin:
+      path: ./plugin
+    conformance:
+      path: ./conformance
