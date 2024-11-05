@@ -1,5 +1,7 @@
 module Test.Bench where
 
+-- TODO This Benchmark program should probably be the default test program for the library, rather than in here.
+
 import Prelude
 
 import Data.Array (range)

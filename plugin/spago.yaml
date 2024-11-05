@@ -1,9 +1,3 @@
-workspace:
-  packageSet:
-    registry: 60.5.1
-  extraPackages:
-    protobuf:
-      path: ../library
 package:
   name: protoc-plugin
   dependencies:
@@ -25,3 +19,10 @@ package:
       - console
       - unfoldable
       - numbers
+
+workspace:
+  packageSet:
+    registry: 60.5.1
+  extraPackages:
+    protobuf:
+      path: ../library

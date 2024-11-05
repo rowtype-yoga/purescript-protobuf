@@ -9,6 +9,7 @@ package:
     location:
       githubOwner: rowtype-yoga
       githubRepo: purescript-protobuf
+      subdir: library
   dependencies:
     - arraybuffer: ">=13.1.1 <14.0.0"
     - arraybuffer-builder: ">=3.1.0 <4.0.0"
@@ -35,5 +36,3 @@ package:
     - tuples: ">=7.0.0 <8.0.0"
     - uint: ">=7.0.0 <8.0.0"
     - web-encoding: ">=3.0.0 <4.0.0"
-
-workspace: {}

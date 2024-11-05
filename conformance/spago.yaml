@@ -1,9 +1,3 @@
-workspace:
-  packageSet:
-    registry: 60.5.1
-  extraPackages:
-    protobuf:
-      path: ../library
 package:
   name: conformance-purescript
   dependencies:
@@ -14,3 +8,10 @@ package:
     - node-streams
     - console
     - unsafe-coerce
+
+workspace:
+  packageSet:
+    registry: 60.5.1
+  extraPackages:
+    protobuf:
+      path: ../library

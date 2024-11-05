@@ -4,13 +4,16 @@
 `$(dirname $(which protoc))/../src/google/protobuf/unittest_proto3_optional.proto`
 
 To test purescript-protobuf, run `nix develop` from the top level directory
-of the repo, then in this directory:
+of the repo, then:
 
 ```console
-spago build
+protoc --purescript_out=./plugin/test/Test/generated ./plugin/test/*.proto
 ```
 ```console
-protoc --purescript_out=./plugin/test/Test/generated ./plugin/test/*.proto
+cd plugin
+```
+```console
+spago build
 ```
 ```console
 spago test
@@ -18,9 +21,11 @@ spago test
 
 # Benchmarks
 
-To run the benchmarks, run `nix develop` from the top level directory, then
-in this directory:
+To run the benchmarks, run `nix develop` from the top level directory, then:
 
+```console
+cd plugin
+```
 ```console
 spago test --main Test.Bench
 ```
