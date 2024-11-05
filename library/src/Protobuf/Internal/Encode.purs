@@ -247,7 +247,7 @@ encodeBuilder fieldNumber s = do
   encodeVarint32 $ UInt.fromInt $ Builder.length s
   tell s
 
--- | https://protobuf.dev/programming-guides/encoding#signed_integers
+-- | https://protobuf.dev/programming-guides/encoding/#signed-ints
 encodeZigzag32 :: Int -> UInt
 encodeZigzag32 n = let n' = UInt.fromInt n in (n' `UInt.shl` (UInt.fromInt 1)) `UInt.xor` (n' `UInt.shr` (UInt.fromInt 31))
 
@@ -309,7 +309,7 @@ encodeVarint32 n_0 = do
 
   u0x80 = UInt.fromInt 0x80
 
--- | https://protobuf.dev/programming-guides/encoding#signed_integers
+-- | https://protobuf.dev/programming-guides/encoding/#signed-ints
 encodeZigzag64 :: Int64 -> UInt64
 encodeZigzag64 n = Int64.toUnsigned $ (n `Int64.shl` (Int64.fromInt 1)) `Int64.xor` (n `Int64.shr` (Int64.fromInt 63))
 
