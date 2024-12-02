@@ -2,6 +2,9 @@ syntax = "proto3";
 
 package pack6;
 
+// `unittest_proto3_optional.proto` is copied from
+// `$(dirname $(which protoc))/../src/google/protobuf/unittest_proto3_optional.proto`
+
 // import "google/protobuf/unittest_proto3_optional.proto";
 
 message Msg6 {

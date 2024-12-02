@@ -1,7 +1,7 @@
--- | Entry point for the code-generating executable `protoc` plugin. See the
--- | package README for instructions on how to run the code generator.
+-- | Entry point for the code-generating executable plugin `protoc-gen-purescript`.
+-- | See the package README for instructions on how to run the code generator.
 
-module ProtocPlugin.Main (main) where
+module Main (main) where
 
 import Prelude
 

@@ -1,9 +1,8 @@
 name: CI
 on:
   push:
-    branches: [master, dev]
-  pull_request:
     branches: [master]
+  pull_request:
 
 jobs:
   test:
@@ -53,7 +52,7 @@ jobs:
       - name: Test Plugin
         # Need --experimental_allow_proto3_optional until the CI protoc is upgraded
         run: |
-          protoc --experimental_allow_proto3_optional --plugin=bin/protoc-gen-purescript --purescript_out=./plugin/test/Test/generated ./plugin/test/*.proto
+          protoc --experimental_allow_proto3_optional --plugin=bin/protoc-gen-purescript --purescript_out=./plugin/test/Test/generated --proto_path ./plugin/test ./plugin/test/*.proto
           cd plugin
           spago test
 
