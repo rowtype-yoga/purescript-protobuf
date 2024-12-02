@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-node --input-type=module  --abort-on-uncaught-exception --trace-sigint --trace-uncaught -e "import {main} from 'conformance/output/Conformance.Main/index.js'; main();"
+node --input-type=module  --abort-on-uncaught-exception --trace-sigint --trace-uncaught -e "import {main} from './conformance/output/Main/index.js'; main();"

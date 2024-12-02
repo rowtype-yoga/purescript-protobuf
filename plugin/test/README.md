@@ -9,6 +9,11 @@ of the repo, then:
 ```console
 protoc --purescript_out=./plugin/test/Test/generated ./plugin/test/*.proto
 ```
+or, for the plugin from src tree, not the Nix store,
+``console
+protoc --plugin=bin/protoc-gen-purescript --purescript_out=./plugin/test/Test/generated ./plugin/test/*.proto
+```
+then
 ```console
 cd plugin
 ```

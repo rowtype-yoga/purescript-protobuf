@@ -7,6 +7,14 @@ From the top directory of this repo,
 ```console
 nix run .#conformance
 ```
+or
+```console
+cd conformance
+spago build
+```
+```console
+conformance_test_runner --enforce_recommended bin/conformance-purescript
+```
 
 ## About the conformance test runner
 

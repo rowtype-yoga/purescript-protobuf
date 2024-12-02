@@ -111,10 +111,11 @@
               protoc-gen-purescript
             ];
 
+            # spago sources not working, TODO
             shellHook = ''
               source <(spago --bash-completion-script `which spago`)
               source <(node --completion-bash)
-              export PURS_IDE_SOURCES=$(pushd plugin;${pkgs.spago-unstable}/bin/spago sources;popd)
+              export PURS_IDE_SOURCES=$(spago sources --package protobuf)
               echo "PureScript Protobuf development environment"
               protoc --version
               echo -n "node "

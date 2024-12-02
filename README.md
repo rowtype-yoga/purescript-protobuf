@@ -67,19 +67,30 @@ To compile PureScript .purs files from .proto files, run for example:
 
 We can test out code generation immediately by
 generating `.purs` files for any of Google’s built-in “well-known types” in the
-[`google.protobuf`](https://protobuf.dev/reference/protobuf/google.protobuf/) package namespace. Try the command `protoc --purescript_out=. google/protobuf/any.proto`
-or `protoc --purescript_out=. google/protobuf/timestamp.proto`.
+[`google.protobuf`](https://protobuf.dev/reference/protobuf/google.protobuf/) package namespace. Try the command
+```console
+protoc --purescript_out=. google/protobuf/any.proto
+```
+or
+```console
+protoc --purescript_out=. google/protobuf/timestamp.proto
+```
 
 To see
 [all of the `.proto` definitions](https://github.com/protocolbuffers/protobuf/tree/main/src/google/protobuf)
 included with the Nix PureScript Protobuf installation including
 the “well-known types,”
-`ls $(nix path-info .#protobuf)/src/google/protobuf/*.proto`
+```console
+ls $(nix path-info .#protobuf)/src/google/protobuf/*.proto
+```
 
-If you don't want to use Nix, then install the PureScript toolchain and `protoc`,
-and add the executable script
-[`bin/protoc-gen-purescript`](bin/protoc-gen-purescript)
-to your `PATH`.
+If you don't want to use Nix,
+1. install the PureScript toolchain and `protoc`.
+2. Build the [PureScript plugin for `protoc`](plugin/).
+3. Run `protoc` with the path to the PureScript plugin executable, like for example
+   ```console
+   protoc --plugin=bin/protoc-gen-purescript --purescript_out=. google/protobuf/timestamp.proto
+   ```
 
 ## Writing programs with the generated code
 
@@ -318,10 +329,11 @@ For that reason, we can only use top-level
 ### PureScript Imports
 
 The generated PureScript code will usually have module imports which cause
-the `purs` compiler to emit redundant import warnings. Sorry. If this causes
+the `purs` compiler to emit `ImplicitQualifiedImport` warnings. Sorry. If this causes
 trouble then the imports can be fixed automatically in a precompiling pass
 with the command-line tool
 [__suggest__](https://github.com/nwolverson/purescript-suggest).
+Or you can [censor the warnings](https://discourse.purescript.org/t/suppressing-warnings-in-code/2485).
 
 ## Nix derivation
 

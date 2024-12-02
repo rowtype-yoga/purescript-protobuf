@@ -1,3 +1,12 @@
+
+# PureScript plugin for Protoc
+
+Build:
+
+```
+spago build
+```
+
 The funny thing about writing a `protoc` compiler plugin codec is that it
 bootstraps itself. We just have to write enough of the compiler plugin codec
 that it can handle the `plugin.proto` and `descriptor.proto` files, and
