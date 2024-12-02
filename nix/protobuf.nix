@@ -1,4 +1,5 @@
-{ pkgs ? import <nixpkgs> { } }:
+{ stdenv, lib, fetchFromGitHub, autogen, automake, autoconf, libtool, rsync, cmake, ... }:
+# pkgs ? import <nixpkgs> { } }:
 
 # The protobuf derivation in nixpkgs does not include the conformance test
 # runners.
@@ -66,7 +67,7 @@ let
   };
   protobuf_repo_v23_2 = rec {
     ref = "v23.2";
-    src = pkgs.fetchFromGitHub {
+    src = fetchFromGitHub {
       owner = "protocolbuffers";
       repo = "protobuf";
       rev = "v23.2";
@@ -74,6 +75,27 @@ let
       fetchSubmodules = true;
     };
   };
+  protobuf_repo_v24_4 = rec {
+    ref = "v24.4";
+    src = fetchFromGitHub {
+      owner = "protocolbuffers";
+      repo = "protobuf";
+      rev = "v24.4";
+      hash = "sha256-7T6RfSJcKYPaUgmU9SWN99d4sdZDzRUg49cy7H6NWFI=";
+      fetchSubmodules = true;
+    };
+  };
+  protobuf_repo_v28_2= rec {
+    ref = "v28.2";
+    src = fetchFromGitHub {
+      owner = "protocolbuffers";
+      repo = "protobuf";
+      rev = "v28.2";
+      hash = "sha256-oRomRjmxsil2XcAQ8jbeQ2f34/Uuxe6DIaAswKgbVWQ=";
+      fetchSubmodules = true;
+    };
+  };
+
 
   # Builds `protoc`, plus the conformance test runners, and also copies
   # in the .proto files for the conformance test protocol,
@@ -83,9 +105,9 @@ let
   #
   # See the Travis test runner script
   # https://github.com/protocolbuffers/protobuf/blob/master/tests.sh
-  mkProtobuf = repo: pkgs.stdenv.mkDerivation {
+  mkProtobuf = repo: stdenv.mkDerivation {
     name = "protobuf-${repo.ref}";
-    nativeBuildInputs = with pkgs; [ autogen automake autoconf libtool rsync ];
+    nativeBuildInputs = [ autogen automake autoconf libtool rsync ];
     src = repo.src;
     # https://github.com/protocolbuffers/protobuf/blob/main/src/README.md#c-installation---unix
     configurePhase = ''
@@ -118,21 +140,21 @@ let
         and conformance .proto definitions.
         '';
       homepage = "https://github.com/xc-jp/purescript-protobuf";
-      license = pkgs.lib.licenses.bsd3;
+      license = lib.licenses.bsd3;
       mainProgram = "protoc";
     };
   };
 
-  cmakeProtobuf = repo: pkgs.stdenv.mkDerivation {
+  cmakeProtobuf = repo: stdenv.mkDerivation {
     name = "protobuf-${repo.ref}";
-    nativeBuildInputs = with pkgs; [ cmake rsync ];
+    nativeBuildInputs = [ cmake rsync ];
     src = repo.src;
     # https://github.com/protocolbuffers/protobuf/blob/main/src/README.md#c-installation---unix
     cmakeFlags = [ "-Dprotobuf_BUILD_CONFORMANCE=ON" ];
     postInstall =
       let
-        conformance_rpath = pkgs.lib.makeLibraryPath [
-          pkgs.stdenv.cc.cc.lib
+        conformance_rpath = lib.makeLibraryPath [
+          stdenv.cc.cc.lib
         ];
       in
       ''
@@ -144,11 +166,11 @@ let
       # Conformance test runner
       cp ./conformance_test_runner $out/bin/conformance_test_runner
       # https://nixos.wiki/wiki/Packaging/Binaries#Creating_the_Derivation_for_upstream_Packaging
-      patchelf --set-interpreter "${pkgs.stdenv.cc.bintools.dynamicLinker}" --set-rpath "$out/lib:${conformance_rpath}" $out/bin/conformance_test_runner
+      patchelf --set-interpreter "${stdenv.cc.bintools.dynamicLinker}" --set-rpath "$out/lib:${conformance_rpath}" $out/bin/conformance_test_runner
 
       # Distribute the cpp conformance program as a test case
       cp ./conformance_cpp $out/bin/conformance_cpp
-      patchelf --set-interpreter "${pkgs.stdenv.cc.bintools.dynamicLinker}" --set-rpath "$out/lib:${conformance_rpath}" $out/bin/conformance_cpp
+      patchelf --set-interpreter "${stdenv.cc.bintools.dynamicLinker}" --set-rpath "$out/lib:${conformance_rpath}" $out/bin/conformance_cpp
       '';
     meta = {
       description = "Google’s Protobuf built for purescript-protobuf";
@@ -158,20 +180,11 @@ let
         and conformance .proto definitions.
         '';
       homepage = "https://github.com/xc-jp/purescript-protobuf";
-      license = pkgs.lib.licenses.bsd3;
+      license = lib.licenses.bsd3;
       mainProgram = "protoc";
     };
   };
 
-in
-{
-  inherit protobuf_repo_v3_9_2;
-  inherit protobuf_repo_v3_14_0;
-  inherit protobuf_repo_v3_15_8;
-  inherit protobuf_repo_v3_20_1;
-  inherit protobuf_repo_v3_21_0;
-  inherit protobuf_repo_v21_10;
-  inherit protobuf_repo_v23_2;
   protobuf_v3_9_2 = mkProtobuf protobuf_repo_v3_9_2;
   protobuf_v3_14_0 = mkProtobuf protobuf_repo_v3_14_0;
   protobuf_v3_15_8 = mkProtobuf protobuf_repo_v3_15_8;
@@ -179,6 +192,20 @@ in
   protobuf_v3_21_0 = mkProtobuf protobuf_repo_v3_21_0;
   protobuf_v21_10 = mkProtobuf protobuf_repo_v21_10;
   protobuf_v23_2 = cmakeProtobuf protobuf_repo_v23_2;
+  protobuf_v24_4 = cmakeProtobuf protobuf_repo_v24_4;
+  protobuf_v28_2 = cmakeProtobuf protobuf_repo_v28_2;
+in
+{
+  inherit protobuf_v3_9_2;
+  inherit protobuf_v3_14_0;
+  inherit protobuf_v3_15_8;
+  inherit protobuf_v3_20_1;
+  inherit protobuf_v3_21_0;
+  inherit protobuf_v21_10;
+  inherit protobuf_v23_2;
+  inherit protobuf_v24_4;
+  inherit protobuf_v28_2;
+  protobuf = protobuf_v28_2;
 }
 
 

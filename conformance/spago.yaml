@@ -1,0 +1,17 @@
+package:
+  name: conformance-purescript
+  dependencies:
+    - protobuf
+    - aff
+    - node-buffer
+    - node-process
+    - node-streams
+    - console
+    - unsafe-coerce
+
+workspace:
+  packageSet:
+    registry: 60.5.1
+  extraPackages:
+    protobuf:
+      path: ../library
