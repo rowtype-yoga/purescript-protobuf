@@ -1,9 +1,6 @@
 {
   description = "PureScript Protobuf";
 
-  # for mkSpagoDerivation
-  nixConfig.sandbox = "relaxed";
-
   inputs = {
     nixpkgs.url = github:NixOS/nixpkgs/nixos-24.05;
     flake-utils = {
