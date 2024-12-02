@@ -2,8 +2,8 @@ syntax = "proto3";
 
 package pack3;
 
-import "plugin/test/msg1.proto";
-import "plugin/test/msg2.proto";
+import "msg1.proto";
+import "msg2.proto";
 
 message msg3 {
   repeated pack.msg1 f1 = 1;

@@ -1,5 +1,7 @@
 # Unreleased
 
+# v4.5.0 2024-12-02
+
 - `spago@next` build system. Reorganized packages.
 
 # v4.4.0 2024-10-15

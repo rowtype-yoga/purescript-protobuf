@@ -51,10 +51,6 @@
               buildPhase = ''
                 spago build --purs-args '${prev.purescript-protobuf-library.src}/src/**/*.purs'
                 '';
-                # The bundled minified output is CommonJS, so we need to change the run script to run node with CommonJS?
-                # spago build --purs-args '${prev.purescript-protobuf-library.src}/**/*.purs'
-                # purs-backend-es bundle-app --no-build --platform node --minify --output-dir output --main ProtocPlugin.Main
-                # spago bundle --offline --pure --platform node --bundle-type app --minify --module ProtocPlugin.Main --purs-args '${prev.purescript-protobuf-library.src}/**/*.purs'
               installPhase = "mkdir $out; cp -r output/* $out/";
             };
           })
@@ -71,7 +67,7 @@
           })
           (prev: final: {
               protoc-gen-purescript = prev.writeScriptBin "protoc-gen-purescript" ''
-                ${prev.nodejs}/bin/node --input-type=module -e "import {main} from '${final.purescript-protobuf-plugin}/ProtocPlugin.Main/index.js'; main();"
+                ${prev.nodejs}/bin/node --input-type=module -e "import {main} from '${final.purescript-protobuf-plugin}/Main/index.js'; main();"
                 '';
               conformance-purescript = prev.writeScriptBin "conformance-purescript" ''
                 #!/usr/bin/env bash
