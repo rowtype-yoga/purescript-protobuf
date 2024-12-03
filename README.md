@@ -351,20 +351,6 @@ derivation. Include `protoc-gen-purescript` and `protobuf` as `nativeBuildInputs
 Then `protoc --purescript_out=path_to_output file.proto` will be runnable
 in our derivation phases.
 
-Building `protoc-gen-purescript` requires an impure Nix build environment.
-
-You might need in your `flake.nix`:
-
-```
-nixConfig.sandbox = "relaxed";
-```
-
-You might need in your `~/.config/nix.conf`:
-
-```
-experimental-features = nix-command flakes configurable-impure-env auto-allocate-uids
-```
-
 The `flake.nix` provides the Google Protocol Buffers conformance tests
 as an `app`. To run the conformance tests right now
 [without installing or cloning](https://determinate.systems/posts/nix-run)
