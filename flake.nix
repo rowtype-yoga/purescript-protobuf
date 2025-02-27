@@ -83,8 +83,16 @@
         let pkgs = nixpkgsFor.${system}; in {
           protoc-gen-purescript = pkgs.protoc-gen-purescript;
           conformance-purescript = pkgs.conformance-purescript;
+          protobuf_v3_9_2 = pkgs.protobuf_v3_9_2;
+          protobuf_v3_14_0 = pkgs.protobuf_v3_14_0;
+          protobuf_v3_15_8 = pkgs.protobuf_v3_15_8;
+          protobuf_v3_20_1 = pkgs.protobuf_v3_20_1;
+          protobuf_v3_21_0 = pkgs.protobuf_v3_21_0;
+          protobuf_v21_10 = pkgs.protobuf_v21_10;
+          protobuf_v23_2 = pkgs.protobuf_v23_2;
+          protobuf_v24_4 = pkgs.protobuf_v24_4;
           protobuf_v28_2 = pkgs.protobuf_v28_2;
-          protobuf = pkgs.protobuf_v28_2;
+          protobuf_local = pkgs.protobuf_local;
         });
 
       devShells = forAllSystems (system:
@@ -99,7 +107,9 @@
               purs-backend-es
               purescript-language-server
               nodejs
-              protobuf
+              # If MacOS then we use the protobuf from nixpkgs.
+              # Else we use our own protobuf.
+              (if stdenv.isDarwin then protobuf else protobuf_local)
               esbuild
               protoc-gen-purescript
             ];
@@ -134,7 +144,7 @@
         let pkgs = nixpkgsFor.${system}; in {
           protoc = {
             type = "app";
-            program = "${pkgs.protobuf}/bin/protoc";
+            program = "${pkgs.protobuf_local}/bin/protoc";
           };
           protoc-gen-purescript = {
             type = "app";
@@ -142,7 +152,7 @@
           };
           conformance_test_runner = {
             type = "app";
-            program = "${pkgs.protobuf}/bin/conformance_test_runner";
+            program = "${pkgs.protobuf_local}/bin/conformance_test_runner";
           };
           conformance-purescript = {
             type = "app";
@@ -153,7 +163,7 @@
               conformance-run = pkgs.writeScriptBin "conformance" ''
                 set -e
                 set -x
-                ${pkgs.protobuf}/bin/conformance_test_runner --enforce_recommended ${pkgs.conformance-purescript}/bin/conformance-purescript
+                ${pkgs.protobuf_local}/bin/conformance_test_runner --enforce_recommended ${pkgs.conformance-purescript}/bin/conformance-purescript
                 '';
             in
             {

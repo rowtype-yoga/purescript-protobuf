@@ -205,7 +205,9 @@ in
   inherit protobuf_v23_2;
   inherit protobuf_v24_4;
   inherit protobuf_v28_2;
-  protobuf = protobuf_v28_2;
+  # We export protobuf_local, our own local build of protobuf which includes
+  # a build of the conformance test runner.
+  protobuf_local = protobuf_v28_2;
 }
 
 
