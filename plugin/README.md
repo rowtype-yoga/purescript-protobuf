@@ -4,14 +4,22 @@
 ## Build
 
 ```shell
+cd plugin
+```
+
+```shell
 spago build
 ```
 
 ## Bundle and Run
 
+Bundle the plugin.
+
 ```shell
 spago bundle --platform node --minify --bundle-type app --outfile protoc-gen-purescript.mjs
 ```
+
+Run the plugin.
 
 ```shell
 protoc --plugin=protoc-gen-purescript=./protoc-gen-purescript.mjs --purescript_out=. google/protobuf/timestamp.proto
@@ -20,13 +28,13 @@ protoc --plugin=protoc-gen-purescript=./protoc-gen-purescript.mjs --purescript_o
 ## Unit Tests
 
 To test purescript-protobuf, run `nix develop` from the top level directory
-of the repo, then:
+of the repo, then `cd plugin` and generate the test messages:
 
 ```shell
-protoc --purescript_out=./plugin/test/Test/generated ./plugin/test/*.proto
+protoc --purescript_out=./plugin/test/Test/generated --proto_path ./test ./test/*.proto
 ```
 
-Or, for the bundled plugin, not the Nix store:
+Or, to generate messages with the bundled plugin, not the Nix store plugin:
 
 ```shell
 protoc --plugin=protoc-gen-purescript=./protoc-gen-purescript.mjs --purescript_out=./test/Test/generated --proto_path ./test ./test/*.proto
@@ -42,10 +50,11 @@ spago test
 
 To run the benchmarks, run `nix develop` from the top level directory, then:
 
-```console
+```shell
 cd plugin
 ```
-```console
+
+```shell
 spago test --main Test.Bench
 ```
 
