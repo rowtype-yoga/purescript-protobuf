@@ -1,4 +1,4 @@
-# purescript-protobuf 💝
+# purescript-protobuf
 
 [![Pursuit](http://pursuit.purescript.org/packages/purescript-protobuf/badge)](http://pursuit.purescript.org/packages/purescript-protobuf/)
 [![Maintainer: jamesdbrock](https://img.shields.io/badge/maintainer-jamesdbrock-teal.svg)](https://github.com/jamesdbrock)
@@ -363,6 +363,17 @@ nix run github:xc-jp/purescript-protobuf#conformance
 ## Contributing
 
 Pull requests welcome.
+
+This repo is organized as a
+[Spago polyrepo](https://github.com/purescript/spago#polyrepo-support).
+
+- `purescript-protobuf`
+  - [`library`](library) — `protobuf` package, published to Pursuit
+    - [`spago.yaml`](library/spago.yaml)
+  - [`plugin`](plugin) — protoc plugin app for code generation
+    - [`spago.yaml`](plugin/spago.yaml)
+  - [`conformance`](conformance) — Google Protobuf Conformance test runner app
+    - [`spago.yaml`](conformance/spago.yaml)
 
 ## Other References
 

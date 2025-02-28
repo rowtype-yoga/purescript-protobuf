@@ -1,7 +1,7 @@
 {
   "workspace": {
     "packages": {
-      "protoc-plugin": {
+      "plugin": {
         "path": "./",
         "core": {
           "dependencies": [
@@ -1348,6 +1348,7 @@
         "control",
         "effect",
         "either",
+        "enums",
         "exceptions",
         "float32",
         "foldable-traversable",
