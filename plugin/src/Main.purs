@@ -27,7 +27,7 @@ import Data.UInt64 as UInt64
 import Effect (Effect)
 import Effect.Aff (runAff_, throwError, error)
 import Effect.Class (liftEffect)
-import Effect.Console as Console
+import Effect.Class.Console as Console
 import Google.Protobuf.Compiler.Plugin (CodeGeneratorRequest(..), CodeGeneratorResponse, CodeGeneratorResponse_File(..), mkCodeGeneratorResponse, parseCodeGeneratorRequest, putCodeGeneratorResponse)
 import Google.Protobuf.Descriptor (DescriptorProto(..), EnumDescriptorProto(..), EnumValueDescriptorProto(..), FieldDescriptorProto(..), FieldDescriptorProto_Label(..), FieldDescriptorProto_Type(..), FieldOptions(..), FileDescriptorProto(..), OneofDescriptorProto(..), SourceCodeInfo(..), SourceCodeInfo_Location(..))
 import Node.Buffer (Buffer, toArrayBuffer, fromArrayBuffer)
@@ -45,7 +45,7 @@ main = runAff_ (either (unsafeCoerce >>> Console.error) (\_ -> pure unit)) do
   -- Protoc just assumes that when it writes the request, we get the whole
   -- request on our read of stdin. Protoc doesn't tell us how to determine
   -- that we have read the whole request.
-  -- So we read and parse in a loop until we have enough bytes that the
+  -- So we read chunks and parse in a loop until we have enough bytes that the
   -- parse succeeds.
   flip tailRecM [] \bs -> do
     {buffers:b,readagain} <- readSome stdin
@@ -56,10 +56,17 @@ main = runAff_ (either (unsafeCoerce >>> Console.error) (\_ -> pure unit)) do
         if not readagain then do
           void $ throwError $ error "stdin is not readable."
           pure (Done unit)
-        else if (Array.length bs') < 20 then do
+        else if (Array.length bs') < 10000 then do
+          -- What we want to do here is detect whether this parsing error was
+          -- because we read to the end of the buffer and need to read more.
+          -- But we don't have a good way to do that right now, so we assume
+          -- that we need to read more, unless we have already read 10000 chunks.
+          -- (Chunk size is usually 65536 bytes.)
+          -- If the parsing error happened for some other reason then we should
+          -- error out here.
           pure (Loop bs')
         else do
-          void $ throwError $ error $ unsafeCoerce err
+          void $ throwError $ error $ show err
           pure (Done unit)
       Right request -> do
         responseBuf <- execPutM $ putCodeGeneratorResponse (generate request)
