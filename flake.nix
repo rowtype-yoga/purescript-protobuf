@@ -118,7 +118,7 @@
             shellHook = ''
               source <(spago --bash-completion-script `which spago`)
               source <(node --completion-bash)
-              export PURS_IDE_SOURCES=$(spago sources --package protobuf)
+              export PURS_IDE_SOURCES=$(spago sources;cd plugin;spago sources)
               echo "PureScript Protobuf development environment"
               protoc --version
               echo -n "node "

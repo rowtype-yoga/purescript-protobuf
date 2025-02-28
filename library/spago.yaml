@@ -36,3 +36,7 @@ package:
     - tuples: ">=7.0.0 <8.0.0"
     - uint: ">=7.0.0 <8.0.0"
     - web-encoding: ">=3.0.0 <4.0.0"
+
+workspace:
+  packageSet:
+    registry: 60.5.1
