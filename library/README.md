@@ -81,7 +81,7 @@ To see
 included with the Nix PureScript Protobuf installation including
 the “well-known types,”
 ```shell
-ls $(nix path-info .#protobuf)/src/google/protobuf/*.proto
+ls $(nix path-info .#protobuf_local)/src/google/protobuf/*.proto
 ```
 
 If you don't want to use Nix,
