@@ -24,6 +24,7 @@ import Control.Monad.Trans.Class (lift)
 import Data.Array (snoc, foldRecM)
 import Data.Array as Array
 import Data.ArrayBuffer.Builder (DataBuff(..), PutM, subBuilder)
+import Data.ArrayBuffer.DataView (byteLength)
 import Data.ArrayBuffer.Types (DataView, ByteLength)
 import Data.Enum (class BoundedEnum, fromEnum, toEnum)
 import Data.Foldable (foldl)
@@ -39,7 +40,8 @@ import Data.UInt64 (UInt64)
 import Data.UInt64 as UInt64
 import Effect.Class (class MonadEffect)
 import Parsing (ParserT, Position(..), fail, position)
-import Parsing.DataView (takeN)
+import Parsing.Combinators (lookAhead)
+import Parsing.DataView (takeN, takeRest)
 import Protobuf.Internal.Common (Bytes(..), FieldNumber, WireType(..), label)
 import Protobuf.Internal.Decode as Decode
 import Protobuf.Internal.Encode as Encode
@@ -76,6 +78,7 @@ type FieldNumberInt
   = Int
 
 -- | Call a parser repeatedly until exactly *N* bytes have been consumed.
+-- | Will fail if not enough bytes remain in the DataView.
 -- | Will fail if too many bytes are consumed.
 manyLength ::
   forall m a.
@@ -85,19 +88,24 @@ manyLength ::
   ByteLength ->
   ParserT DataView m (Array a)
 manyLength p len = do
-  Position { index: posBegin } <- position
-  let
-    go :: List a -> ParserT DataView m (Step (List a) (List a))
-    go accum = do
-      Position { index: pos } <- position
-      case compare (pos - posBegin) len of
-        GT -> fail "manyLength consumed too many bytes."
-        EQ -> lift $ pure (Done accum)
-        LT -> do
-          x <- p
-          pure (Loop (x : accum))
-  -- https://github.com/purescript-contrib/purescript-parsing/pull/199#issuecomment-1145956271
-  Array.reverse <$> Array.fromFoldable <$> tailRecM go List.Nil
+  remaining_bytes :: Int <- byteLength <$> lookAhead takeRest
+  if remaining_bytes < len
+    then do
+      fail $ "manyLength " <> show len <> " not enough bytes of input " <> show remaining_bytes <> " remaining"
+    else do
+      Position { index: posBegin } <- position
+      let
+        go :: List a -> ParserT DataView m (Step (List a) (List a))
+        go accum = do
+          Position { index: pos } <- position
+          case compare (pos - posBegin) len of
+            GT -> fail $ "manyLength " <> show len <> " consumed too many bytes " <> (show $ pos - posBegin)
+            EQ -> lift $ pure (Done accum)
+            LT -> do
+              x <- p
+              pure (Loop (x : accum))
+      -- https://github.com/purescript-contrib/purescript-parsing/pull/199#issuecomment-1145956271
+      Array.reverse <$> Array.fromFoldable <$> tailRecM go List.Nil
 
 -- | A message field value from an unknown `.proto` definition.
 -- |
@@ -174,13 +182,20 @@ putFieldUnknown (UnknownLenDel fieldNumber x) = Encode.encodeBytesField fieldNum
 
 putFieldUnknown (UnknownBits32 fieldNumber x) = Encode.encodeBytesField fieldNumber x
 
--- | Parse a length, then call a parser which takes one length as its argument.
+-- | Parse a bytelength, then call a parser which takes one bytelength as its argument.
 parseLenDel ::
   forall m a.
   MonadEffect m =>
   (Int -> ParserT DataView m a) ->
   ParserT DataView m a
-parseLenDel p = p <<< UInt.toInt =<< Decode.decodeVarint32
+parseLenDel p = do
+  len <- UInt.toInt <$> Decode.decodeVarint32
+  remaining_bytes :: Int <- byteLength <$> lookAhead takeRest
+  if remaining_bytes < len
+    then do
+      fail $ "parseLenDel " <> show len <> " not enough bytes of input " <> show remaining_bytes <> " remaining"
+    else do
+      p len
 
 putLenDel ::
   forall m a.
