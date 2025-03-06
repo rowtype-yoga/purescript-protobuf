@@ -5,12 +5,13 @@ module Main (main) where
 
 import Prelude
 
-import Control.Monad.Rec.Class (tailRecM, Step(..))
+import Control.Monad.Rec.Class (class MonadRec, Step(..), tailRecM)
 import Data.Array (catMaybes, concat, fold, mapWithIndex)
 import Data.Array as Array
 import Data.ArrayBuffer.ArrayBuffer as AB
 import Data.ArrayBuffer.Builder (execPutM)
 import Data.ArrayBuffer.DataView as DV
+import Data.ArrayBuffer.Types as ABT
 import Data.CodePoint.Unicode as Unicode
 import Data.Either (Either(..), either)
 import Data.Maybe (Maybe(..), fromMaybe, maybe)
@@ -22,20 +23,25 @@ import Data.String.Regex as String.Regex
 import Data.String.Regex.Flags as String.Regex.Flags
 import Data.Traversable (sequence, traverse)
 import Data.Tuple (Tuple(..))
+import Data.UInt as UInt
 import Data.UInt64 (UInt64)
 import Data.UInt64 as UInt64
 import Effect (Effect)
 import Effect.Aff (runAff_, throwError, error)
-import Effect.Class (liftEffect)
+import Effect.Class (class MonadEffect, liftEffect)
 import Effect.Class.Console as Console
-import Google.Protobuf.Compiler.Plugin (CodeGeneratorRequest(..), CodeGeneratorResponse, CodeGeneratorResponse_File(..), mkCodeGeneratorResponse, parseCodeGeneratorRequest, putCodeGeneratorResponse)
+import Google.Protobuf.Compiler.Plugin (CodeGeneratorRequest(..), CodeGeneratorResponse, CodeGeneratorResponse_File(..), mkCodeGeneratorResponse, parseCodeGeneratorRequest, putCodeGeneratorResponse, parseVersion)
 import Google.Protobuf.Descriptor (DescriptorProto(..), EnumDescriptorProto(..), EnumValueDescriptorProto(..), FieldDescriptorProto(..), FieldDescriptorProto_Label(..), FieldDescriptorProto_Type(..), FieldOptions(..), FileDescriptorProto(..), OneofDescriptorProto(..), SourceCodeInfo(..), SourceCodeInfo_Location(..))
 import Node.Buffer (Buffer, toArrayBuffer, fromArrayBuffer)
 import Node.Buffer as Buffer
 import Node.Path (basenameWithoutExt)
 import Node.Process (stdin, stdout)
 import Node.Stream.Aff (readSome, write)
-import Parsing (runParserT)
+import Parsing (ParserT, fail, runParserT)
+import Parsing.DataView (takeN)
+import Protobuf.Internal.Common (label)
+import Protobuf.Internal.Decode (decodeString, decodeTag32)
+import Protobuf.Internal.Runtime (parseLenDel, manyLength)
 import Unsafe.Coerce (unsafeCoerce)
 
 
@@ -51,7 +57,7 @@ main = runAff_ (either (unsafeCoerce >>> Console.error) (\_ -> pure unit)) do
     {buffers:b,readagain} <- readSome stdin
     let bs' = bs <> b
     ab <- liftEffect $ toArrayBuffer =<< Buffer.concat bs'
-    runParserT (DV.whole ab) (parseCodeGeneratorRequest (AB.byteLength ab)) >>= case _ of
+    runParserT (DV.whole ab) (parseCodeGeneratorRequestComplete (AB.byteLength ab)) >>= case _ of
       Left err -> do
         if not readagain then do
           void $ throwError $ error "stdin is not readable."
@@ -68,11 +74,48 @@ main = runAff_ (either (unsafeCoerce >>> Console.error) (\_ -> pure unit)) do
         else do
           void $ throwError $ error $ show err
           pure (Done unit)
-      Right request -> do
-        responseBuf <- execPutM $ putCodeGeneratorResponse (generate request)
-        buf :: Buffer <- liftEffect $ fromArrayBuffer responseBuf
-        write stdout [buf]
-        pure (Done unit)
+      Right unit -> do
+        runParserT (DV.whole ab) (parseCodeGeneratorRequest (AB.byteLength ab)) >>= case _ of
+          Left err -> do
+            void $ throwError $ error $ show err
+            pure (Done unit)
+          Right request -> do
+            responseBuf <- execPutM $ putCodeGeneratorResponse (generate request)
+            buf :: Buffer <- liftEffect $ fromArrayBuffer responseBuf
+            write stdout [buf]
+            pure (Done unit)
+
+-- | This is a parser which will succeed only if parseCodeGeneratorRequest will succeed.
+-- | It is faster than parseCodeGeneratorRequest.
+-- | We use this parser to determine if we have read the whole request from stdin.
+-- | If this parser fails then we need to read more from stdin.
+parseCodeGeneratorRequestComplete
+  :: forall m. MonadEffect m
+  => MonadRec m
+  => ABT.ByteLength
+  -> ParserT ABT.DataView m Unit
+parseCodeGeneratorRequestComplete length = label "parseCodeGeneratorRequestComplete / " $ do
+  _ <- flip manyLength length do
+    Tuple fieldNumber _wireType <- decodeTag32
+    case UInt.toInt fieldNumber of
+      1 -> do -- file_to_generate
+        _ <- decodeString
+        pure unit
+      2 -> do -- parameter
+        _ <- decodeString
+        pure unit
+      3 -> do -- compiler_version
+        _ <- parseLenDel parseVersion
+        pure unit
+      15 -> do -- proto_file
+        _ <- parseLenDel takeN
+        pure unit
+      17 -> do -- source_file_descriptors
+        _ <- parseLenDel takeN
+        pure unit
+      _ -> do
+        fail "unexpected field number"
+  pure unit
 
 generate :: CodeGeneratorRequest -> CodeGeneratorResponse
 generate (CodeGeneratorRequest { proto_file }) = do
