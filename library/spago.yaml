@@ -3,7 +3,7 @@
 package:
   name: protobuf
   publish:
-    license: MIT
+    license: BSD-3-Clause
     version: 4.5.0
     location:
       githubOwner: rowtype-yoga
