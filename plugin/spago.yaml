@@ -10,7 +10,6 @@ package:
     - console
     - unicode
     - unsafe-coerce
-    - parsing: ">=10.3.1 <11.0.0"
 
   test:
     main: Test.Main
@@ -23,10 +22,7 @@ package:
 
 workspace:
   packageSet:
-    registry: 63.3.0
+    registry: 63.5.0
   extraPackages:
     protobuf:
       path: ../library
-    parsing:
-      git: https://github.com/purescript-contrib/purescript-parsing.git
-      ref: v10.3.1 # branch, tag, or commit hash

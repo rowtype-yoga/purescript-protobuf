@@ -11,9 +11,6 @@
             "node-path",
             "node-process",
             "node-streams",
-            {
-              "parsing": ">=10.3.1 <11.0.0"
-            },
             "protobuf",
             "unicode",
             "unsafe-coerce"
@@ -131,7 +128,7 @@
     },
     "package_set": {
       "address": {
-        "registry": "63.3.0"
+        "registry": "63.5.0"
       },
       "compiler": ">=0.15.15 <0.16.0",
       "content": {
@@ -447,7 +444,7 @@
         "owoify": "1.2.0",
         "pairs": "9.0.1",
         "parallel": "7.0.0",
-        "parsing": "10.2.0",
+        "parsing": "10.3.0",
         "parsing-dataview": "3.2.4",
         "partial": "4.0.0",
         "pathy": "9.0.0",
@@ -577,7 +574,7 @@
         "transformation-matrix": "1.0.1",
         "transformers": "6.1.0",
         "tree-rose": "4.0.2",
-        "trivial-unfold": "0.1.1",
+        "trivial-unfold": "0.4.1",
         "ts-bridge": "4.0.0",
         "tuples": "7.0.0",
         "two-or-more": "1.0.0",
@@ -658,10 +655,6 @@
       }
     },
     "extra_packages": {
-      "parsing": {
-        "git": "https://github.com/purescript-contrib/purescript-parsing.git",
-        "ref": "v10.3.1"
-      },
       "protobuf": {
         "path": "../library"
       }
@@ -1276,9 +1269,9 @@
       ]
     },
     "parsing": {
-      "type": "git",
-      "url": "https://github.com/purescript-contrib/purescript-parsing.git",
-      "rev": "3ad2900eb9a9d2b079f4b5a4547db7cf10a83eb4",
+      "type": "registry",
+      "version": "10.3.0",
+      "integrity": "sha256-ykIVIZcsyRcMxui1ZH+4GLzoVTstv6BRVZyz55+2TvI=",
       "dependencies": [
         "arrays",
         "control",

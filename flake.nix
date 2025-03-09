@@ -63,11 +63,10 @@
             };
           })
           (prev: final: {
-              protoc-gen-purescript = prev.writeScriptBin "protoc-gen-purescript" ''
+              protoc-gen-purescript = prev.writeShellScriptBin "protoc-gen-purescript" ''
                 ${prev.nodejs}/bin/node --input-type=module -e "import {main} from '${final.purescript-protobuf-plugin}/Main/index.js'; main();"
                 '';
-              conformance-purescript = prev.writeScriptBin "conformance-purescript" ''
-                #!/usr/bin/env bash
+              conformance-purescript = prev.writeShellScriptBin "conformance-purescript" ''
                 ${prev.nodejs}/bin/node --abort-on-uncaught-exception --trace-sigint --trace-uncaught --input-type=module -e "import {main} from '${final.purescript-protobuf-conformance}/Main/index.js'; main();"
                 '';
             }
@@ -160,7 +159,7 @@
           };
           conformance =
             let
-              conformance-run = pkgs.writeScriptBin "conformance" ''
+              conformance-run = pkgs.writeShellScriptBin "conformance" ''
                 set -e
                 set -x
                 ${pkgs.protobuf_local}/bin/conformance_test_runner --enforce_recommended ${pkgs.conformance-purescript}/bin/conformance-purescript
