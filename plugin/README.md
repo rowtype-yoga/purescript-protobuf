@@ -31,7 +31,7 @@ To test purescript-protobuf, run `nix develop` from the top level directory
 of the repo, then `cd plugin` and generate the test messages:
 
 ```shell
-protoc --purescript_out=./plugin/test/Test/generated --proto_path=./test ./test/*.proto
+protoc --purescript_out=./test/Test/generated --proto_path=./test ./test/*.proto
 ```
 
 Or, to generate messages with the bundled plugin, not the Nix store plugin:
