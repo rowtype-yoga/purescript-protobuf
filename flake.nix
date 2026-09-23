@@ -98,7 +98,7 @@
         let pkgs = nixpkgsFor.${system}; in {
           default = pkgs.mkShell {
             name = "purescript-protobuf-devshell";
-            inputsFrom = builtins.attrValues self.packages.${system};
+            # inputsFrom = builtins.attrValues self.packages.${system};
             buildInputs = with pkgs; [
               purs
               spago-unstable

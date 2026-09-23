@@ -11,7 +11,7 @@ package:
 
 workspace:
   packageSet:
-    registry: 63.5.0
+    registry: 81.1.0
   extraPackages:
     protobuf:
       path: ../library
