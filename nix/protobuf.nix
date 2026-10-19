@@ -1,4 +1,4 @@
-{ stdenv, lib, fetchFromGitHub, autogen, automake, autoconf, libtool, rsync, cmake, ... }:
+{ stdenv, lib, fetchFromGitHub, autogen, automake, autoconf, libtool, rsync, cmake, abseil-cpp, jsoncpp, zlib, ... }:
 # pkgs ? import <nixpkgs> { } }:
 
 # The protobuf derivation in nixpkgs does not include the conformance test
@@ -16,6 +16,20 @@
 # https://nixos.wiki/wiki/Packaging/Quirks_and_Caveats
 
 let
+
+  # protobuf v36 requires abseil-cpp 20250512.1 (it uses the lowercase
+  # `absl_nonnull` nullability macros, which only exist from that release on).
+  # nixpkgs 25.05 only carries abseil-cpp 20250127.1, so bump it here.
+  # See `abseil-cpp-version` in protobuf's cmake/dependencies.cmake.
+  abseil-cpp_20250512 = abseil-cpp.overrideAttrs (finalAttrs: _: {
+    version = "20250512.1";
+    src = fetchFromGitHub {
+      owner = "abseil";
+      repo = "abseil-cpp";
+      tag = finalAttrs.version;
+      hash = "sha256-eB7OqTO9Vwts9nYQ/Mdq0Ds4T1KgmmpYdzU09VPWOhk=";
+    };
+  });
 
   protobuf_repo_v3_9_2 = rec {
     ref = "v3.9.2";
@@ -95,6 +109,31 @@ let
       fetchSubmodules = true;
     };
   };
+  protobuf_repo_v36_2 = rec {
+    ref = "v36.2";
+    src = fetchFromGitHub {
+      owner = "protocolbuffers";
+      repo = "protobuf";
+      rev = "v36.2";
+      hash = "sha256-OWPtNR47+LsT/SD3PkX/MOTSK+mtHDodX+pkvtb71l0=";
+      fetchSubmodules = true;
+    };
+    # As of v36, abseil-cpp and jsoncpp are no longer vendored as git
+    # submodules. The CMake build does `find_package` for each and otherwise
+    # falls back to cloning them from GitHub, which cannot work in the Nix
+    # build sandbox. So they have to be supplied from nixpkgs, and
+    # protobuf_LOCAL_DEPENDENCIES_ONLY makes a missing dependency a hard
+    # error instead of a silent attempt to reach the network.
+    #
+    # BUILD_SHARED_LIBS is required because conformance.cmake links the
+    # `jsoncpp_static` target for a static build, and nixpkgs' jsoncpp only
+    # exports the shared `jsoncpp_lib` target.
+    buildInputs = [ abseil-cpp_20250512 jsoncpp zlib ];
+    cmakeFlags = [
+      "-Dprotobuf_LOCAL_DEPENDENCIES_ONLY=ON"
+      "-DBUILD_SHARED_LIBS=ON"
+    ];
+  };
 
 
   # Builds `protoc`, plus the conformance test runners, and also copies
@@ -139,7 +178,6 @@ let
         .proto definitions, as well as all of the conformance test runners
         and conformance .proto definitions.
         '';
-      homepage = "https://github.com/xc-jp/purescript-protobuf";
       license = lib.licenses.bsd3;
       mainProgram = "protoc";
     };
@@ -148,14 +186,15 @@ let
   cmakeProtobuf = repo: stdenv.mkDerivation {
     name = "protobuf-${repo.ref}";
     nativeBuildInputs = [ cmake rsync ];
+    buildInputs = repo.buildInputs or [];
     src = repo.src;
     # https://github.com/protocolbuffers/protobuf/blob/main/src/README.md#c-installation---unix
-    cmakeFlags = [ "-Dprotobuf_BUILD_CONFORMANCE=ON" ];
+    cmakeFlags = [ "-Dprotobuf_BUILD_CONFORMANCE=ON" ] ++ (repo.cmakeFlags or []);
     postInstall =
       let
-        conformance_rpath = lib.makeLibraryPath [
-          stdenv.cc.cc.lib
-        ];
+        conformance_rpath = lib.makeLibraryPath (
+          [ stdenv.cc.cc.lib ] ++ (repo.buildInputs or [])
+        );
       in
       ''
       # Recursive copy all the .proto files
@@ -179,7 +218,6 @@ let
         .proto definitions, as well as all of the conformance test runners
         and conformance .proto definitions.
         '';
-      homepage = "https://github.com/xc-jp/purescript-protobuf";
       license = lib.licenses.bsd3;
       mainProgram = "protoc";
     };
@@ -194,6 +232,7 @@ let
   protobuf_v23_2 = cmakeProtobuf protobuf_repo_v23_2;
   protobuf_v24_4 = cmakeProtobuf protobuf_repo_v24_4;
   protobuf_v28_2 = cmakeProtobuf protobuf_repo_v28_2;
+  protobuf_v36_2 = cmakeProtobuf protobuf_repo_v36_2;
 in
 {
   inherit protobuf_v3_9_2;
@@ -205,6 +244,11 @@ in
   inherit protobuf_v23_2;
   inherit protobuf_v24_4;
   inherit protobuf_v28_2;
+  inherit protobuf_v36_2;
+  # The abseil that protobuf_v36_2 is built against. Anything linking against
+  # that protobuf must use the same one, so it is exported rather than left
+  # anonymous inside the derivation.
+  abseil-cpp = abseil-cpp_20250512;
   # We export protobuf_local, our own local build of protobuf which includes
   # a build of the conformance test runner.
   protobuf_local = protobuf_v28_2;
